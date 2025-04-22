@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Build: `bundle exec rake build`
 - Test all: `bundle exec rake test`
-- Run single test: `bundle exec ruby -Ilib:test test/path/to/test_file.rb -n test_method_name`
+- Run single test: `bundle exec rake test spec/path/to/test_file.rb`
 - Lint: `bundle exec rake rubocop -A`
 - Default (tests + lint): `bundle exec rake`
 
 ## Tech stack
 - `cli-kit` and `cli-ui` for the CLI tool
-- Testing: Use Minitest, VCR for HTTP mocking, test files named with `_test.rb` suffix
+- Testing: Use Rspec, VCR for HTTP mocking, test files named with `_spec.rb` suffix
 
 ## Code Style Guidelines
 
