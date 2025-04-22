@@ -1,0 +1,27 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Commands
+
+- Build: `bundle exec rake build`
+- Test all: `bundle exec rake test`
+- Run single test: `bundle exec ruby -Ilib:test test/path/to/test_file.rb -n test_method_name`
+- Lint: `bundle exec rake rubocop -A`
+- Default (tests + lint): `bundle exec rake`
+
+## Tech stack
+- `cli-kit` and `cli-ui` for the CLI tool
+- Testing: Use Minitest, VCR for HTTP mocking, test files named with `_test.rb` suffix
+
+## Code Style Guidelines
+
+- Naming: snake_case for variables/methods, CamelCase for classes/modules, ALL_CAPS for constants
+- Module structure: Use nested modules under the `Roast` namespace
+- Command pattern: Commands implement a `call` method and class-level `help` method
+- Error handling: Use custom exception classes and structured error handling
+- Errors that should stop the program execution should `raise(CLI::Kit::Abort, "Error message")`
+- Documentation: Include method/class documentation with examples when appropriate
+- Dependencies: Prefer existing gems in the Gemfile before adding new ones
+- Define class methods inside `class << self; end` declarations.
+- 
