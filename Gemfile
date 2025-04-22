@@ -14,3 +14,4 @@ gem "rubocop-minitest", require: false
 gem "mocha", require: false
 gem "vcr", require: false
 gem "webmock", require: false
+gem "rake", require: false
