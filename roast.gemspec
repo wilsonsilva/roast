@@ -7,8 +7,8 @@ require "roast/version"
 Gem::Specification.new do |spec|
   spec.name          = "roast"
   spec.version       = Roast::VERSION
-  spec.authors       = ["Paulo Arruda"]
-  spec.email         = ["paulo.arruda@shopify.com"]
+  spec.authors       = ["Shopify"]
+  spec.email         = ["opensource@shopify.com"]
 
   spec.summary       = "A way to create structured AI workflows in Ruby"
   spec.description   = "Roast is a Ruby library for creating structured AI workflows and integrating with AI services"
