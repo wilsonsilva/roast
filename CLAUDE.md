@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## About the codebase
+- This is a Ruby gem called Roast. Its purpose is to run AI workflows defined in a YAML file.
+
 ## Commands
 
 - Build: `bundle exec rake build`
@@ -24,4 +27,5 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Documentation: Include method/class documentation with examples when appropriate
 - Dependencies: Prefer existing gems in the Gemfile before adding new ones
 - Define class methods inside `class << self; end` declarations.
-- 
+- Add runtime dependencies to `roast.gemspec`.
+- Add development dependencies to `Gemfile`.
