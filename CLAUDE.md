@@ -8,9 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 - Build: `bundle exec rake build`
-- Test all: `bundle exec rake test`
-- Run single test: `bundle exec rake test spec/path/to/test_file.rb`
-- Lint: `bundle exec rake rubocop -A`
+- Test all: `bundle exec rspec`
+- Run single test: `bundle exec rspec spec/path/to/test_file.rb`
+- Lint: `bundle exec rubocop -A`
 - Default (tests + lint): `bundle exec rake`
 
 ## Tech stack

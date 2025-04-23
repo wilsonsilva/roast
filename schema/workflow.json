@@ -1,0 +1,92 @@
+{
+    "type": "object",
+    "required": ["name", "tools", "inputs", "steps"],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "tools": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "inputs": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "minProperties": 1,
+              "maxProperties": 1
+            }
+          ]
+        }
+      },
+      "steps": {
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "steps": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": ["steps"]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "proceed?": {
+                  "type": "object",
+                  "properties": {
+                    "true": {
+                      "$ref": "#/properties/steps"
+                    },
+                    "false": {
+                      "$ref": "#/properties/steps"
+                    }
+                  },
+                  "required": ["true", "false"]
+                }
+              },
+              "required": ["proceed?"]
+            }
+          ]
+        }
+      },
+      "proceed?": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": ["label"]
+      }
+    }
+  }

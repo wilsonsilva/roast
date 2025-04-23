@@ -1,0 +1,6 @@
+name: My Workflow
+tools:
+  - tool1
+inputs:
+  - input1
+# Missing steps key which is required

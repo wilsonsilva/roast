@@ -40,4 +40,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency("cli-kit", "~> 5.0.1")
   spec.add_dependency("cli-ui", "~> 2.3.1")
   spec.add_dependency("faraday-retry")
+  spec.add_dependency("json-schema")
 end

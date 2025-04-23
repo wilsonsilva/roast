@@ -3,6 +3,7 @@
 require "cli/ui"
 require "cli/kit"
 require "roast/version"
+require "roast/workflow_validator"
 
 CLI::UI::StdoutRouter.enable
 
