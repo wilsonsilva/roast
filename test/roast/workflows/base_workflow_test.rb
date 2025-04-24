@@ -10,7 +10,7 @@ module Roast
       end
 
       def test_initialize
-        Roast::Support::PromptLoader
+        Roast::Helpers::PromptLoader
           .expects(:load_prompt)
           .returns("Test prompt")
 

@@ -15,7 +15,7 @@ module Minitest
 end
 
 module Roast
-  module Support
+  module Helpers
     class TestStatsCollector
       attr_reader :tests_count, :assertions_count
 
@@ -113,7 +113,7 @@ module Roast
 
         # If the test run failed (returned false), exit 1
         unless test_passed
-          Roast::Support::Logger.error("\nTest failures detected. Exiting with status 1.")
+          Roast::Helpers::Logger.error("\nTest failures detected. Exiting with status 1.")
           exit(1)
         end
 

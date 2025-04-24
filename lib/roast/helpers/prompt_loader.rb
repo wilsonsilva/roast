@@ -4,7 +4,7 @@ require "active_support/core_ext/string"
 require "erb"
 
 module Roast
-  module Support
+  module Helpers
     class PromptLoader
       class << self
         # Loads a sidecar prompt file for a given context (workflow or step) and target file

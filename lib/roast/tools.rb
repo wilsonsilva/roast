@@ -20,8 +20,8 @@ module Roast
         #{File.read(file)}
       PROMPT
     rescue StandardError => e
-      Roast::Support::Logger.error("In current directory: #{Dir.pwd}\n")
-      Roast::Support::Logger.error("Error reading file #{file}\n")
+      Roast::Helpers::Logger.error("In current directory: #{Dir.pwd}\n")
+      Roast::Helpers::Logger.error("Error reading file #{file}\n")
 
       raise e # unable to continue without required file
     end

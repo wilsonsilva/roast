@@ -24,21 +24,21 @@ class RunCoverage < Roast::Workflow::BaseStep
 
     # Make sure the test_runner executable exists
     unless File.exist?(test_runner_path)
-      Roast::Support::Logger.error("Test runner executable not found: #{test_runner_path}")
+      Roast::Helpers::Logger.error("Test runner executable not found: #{test_runner_path}")
       exit(1)
     end
 
     # Resolve paths to prevent issues when pwd differs from project root
-    resolved_subject_file = Roast::Support::PathResolver.resolve(subject_file)
-    resolved_test_file = Roast::Support::PathResolver.resolve(test_file)
+    resolved_subject_file = Roast::Helpers::PathResolver.resolve(subject_file)
+    resolved_test_file = Roast::Helpers::PathResolver.resolve(test_file)
 
     # Run the test_runner using shadowenv for environment consistency
     command = "shadowenv exec --dir . -- #{test_runner_path} #{resolved_subject_file} #{resolved_test_file}"
     output, status = Open3.capture2(command)
 
     unless status.success?
-      Roast::Support::Logger.error("Test runner exited with non-zero status: #{status.exitstatus}")
-      Roast::Support::Logger.error(output)
+      Roast::Helpers::Logger.error("Test runner exited with non-zero status: #{status.exitstatus}")
+      Roast::Helpers::Logger.error(output)
       exit(status.exitstatus)
     end
 

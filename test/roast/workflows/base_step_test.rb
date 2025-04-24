@@ -23,7 +23,7 @@ module Roast
       end
 
       def test_call_adds_prompt_to_transcript_and_calls_chat_completion
-        Roast::Support::PromptLoader
+        Roast::Helpers::PromptLoader
           .expects(:load_prompt)
           .with(@step, @workflow.file)
           .returns("Test prompt")

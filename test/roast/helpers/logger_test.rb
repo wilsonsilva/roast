@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require "minitest/autorun"
-require "roast/support/logger"
+require "roast/helpers/logger"
 require "stringio"
 
 module Roast
-  module Support
+  module Helpers
     class LoggerTest < Minitest::Test
       # Reset global logger instance before each test
       def setup

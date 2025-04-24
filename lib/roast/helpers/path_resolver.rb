@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Roast
-  module Support
+  module Helpers
     # Utility class for resolving file paths with directory structure issues
     class PathResolver
       class << self

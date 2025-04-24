@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require "roast/support/logger"
+require "roast/helpers/logger"
 
 module Roast
   module Tools
@@ -22,7 +22,7 @@ module Roast
               content: { type: "string", description: "The content to write to the file" },
             ) do |params|
               Roast::Tools::WriteFile.call(params[:path], params[:content]).tap do |_result|
-                Roast::Support::Logger.info(params[:content])
+                Roast::Helpers::Logger.info(params[:content])
               end
             end
           end
@@ -32,7 +32,7 @@ module Roast
       def call(path, content)
         if path.start_with?("test/")
 
-          Roast::Support::Logger.info("📝 Writing to file: #{path}\n")
+          Roast::Helpers::Logger.info("📝 Writing to file: #{path}\n")
 
           # Ensure the directory exists
           dir = File.dirname(path)
@@ -46,13 +46,13 @@ module Roast
 
           "Successfully wrote #{content.lines.count} lines to #{path}"
         else
-          Roast::Support::Logger.error("😳 Path must start with 'test/' to use the write_file tool\n")
+          Roast::Helpers::Logger.error("😳 Path must start with 'test/' to use the write_file tool\n")
           "Error: Path must start with 'test/' to use the write_file tool, try again."
         end
       rescue StandardError => e
         "Error writing file: #{e.message}".tap do |error_message|
-          Roast::Support::Logger.error(error_message + "\n")
-          Roast::Support::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
+          Roast::Helpers::Logger.error(error_message + "\n")
+          Roast::Helpers::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
         end
       end
     end

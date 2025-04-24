@@ -74,7 +74,7 @@ module Roast
       end
 
       def read_sidecar_prompt
-        Roast::Support::PromptLoader.load_prompt(self, workflow.file)
+        Roast::Helpers::PromptLoader.load_prompt(self, workflow.file)
       end
 
       def process_sidecar_output(response)

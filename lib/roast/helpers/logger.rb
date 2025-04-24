@@ -4,7 +4,7 @@ require "logger"
 require "forwardable"
 
 module Roast
-  module Support
+  module Helpers
     # Central logger for the Roast application
     class Logger
       extend Forwardable

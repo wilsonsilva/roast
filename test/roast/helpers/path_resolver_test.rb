@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "roast/support/path_resolver"
+require "roast/helpers/path_resolver"
 require "fileutils"
 
 module Roast
-  module Support
+  module Helpers
     class PathResolverTest < Minitest::Test
       def setup
         # Create a temporary directory structure for testing path resolution

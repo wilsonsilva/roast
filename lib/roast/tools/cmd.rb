@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "English"
-require "roast/support/logger"
+require "roast/helpers/logger"
 
 module Roast
   module Tools
@@ -25,7 +25,7 @@ module Roast
       end
 
       def call(command)
-        Roast::Support::Logger.info("🔧 Running command: #{command}\n")
+        Roast::Helpers::Logger.info("🔧 Running command: #{command}\n")
 
         # Validate the command starts with one of the allowed prefixes
         allowed_prefixes = ["pwd", "find", "ls", "rake", "ruby", "dev"]
@@ -63,8 +63,8 @@ module Roast
         output
       rescue StandardError => e
         "Error running command: #{e.message}".tap do |error_message|
-          Roast::Support::Logger.error(error_message + "\n")
-          Roast::Support::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
+          Roast::Helpers::Logger.error(error_message + "\n")
+          Roast::Helpers::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
         end
       end
     end

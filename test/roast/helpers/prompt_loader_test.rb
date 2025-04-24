@@ -3,7 +3,7 @@
 require "test_helper"
 
 module Roast
-  module Support
+  module Helpers
     class PromptLoaderTest < Minitest::Test
       def setup
         @workflow = fixture_file("workflow/workflow.yml")

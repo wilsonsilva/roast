@@ -64,7 +64,7 @@ module Roast
       end
 
       def read_sidecar_prompt
-        Roast::Support::PromptLoader.load_prompt(self, file)
+        Roast::Helpers::PromptLoader.load_prompt(self, file)
       end
 
       def read_subject_file

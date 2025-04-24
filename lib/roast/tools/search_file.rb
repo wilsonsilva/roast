@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "roast/support/logger"
+require "roast/helpers/logger"
 
 module Roast
   module Tools
@@ -17,7 +17,7 @@ module Roast
               name: { type: "string", description: "filename with as much of the path as you can deduce" },
             ) do |params|
               Roast::Tools::SearchFile.call(params[:name]).tap do |result|
-                Roast::Support::Logger.debug(result) if ENV["DEBUG"]
+                Roast::Helpers::Logger.debug(result) if ENV["DEBUG"]
               end
             end
           end
@@ -25,7 +25,7 @@ module Roast
       end
 
       def call(filename)
-        Roast::Support::Logger.info("🔍 Searching for file: #{filename}\n")
+        Roast::Helpers::Logger.info("🔍 Searching for file: #{filename}\n")
         search_for(filename).then do |results|
           return "No results found for #{filename}" if results.empty?
           return Roast::Tools::ReadFile.call(results.first) if results.size == 1
@@ -34,8 +34,8 @@ module Roast
         end
       rescue StandardError => e
         "Error searching for file: #{e.message}".tap do |error_message|
-          Roast::Support::Logger.error(error_message + "\n")
-          Roast::Support::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
+          Roast::Helpers::Logger.error(error_message + "\n")
+          Roast::Helpers::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
         end
       end
 

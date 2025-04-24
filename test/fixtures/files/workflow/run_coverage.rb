@@ -24,7 +24,7 @@ class RunCoverage < Roast::Workflow::BaseStep
 
     # Make sure the test_runner executable exists
     unless File.exist?(test_runner_path)
-      Roast::Support::Logger.error("Test runner executable not found: #{test_runner_path}")
+      Roast::Helpers::Logger.error("Test runner executable not found: #{test_runner_path}")
       exit(1)
     end
 
@@ -33,8 +33,8 @@ class RunCoverage < Roast::Workflow::BaseStep
     output, status = Open3.capture2(command)
 
     unless status.success?
-      Roast::Support::Logger.error("Test runner exited with non-zero status: #{status.exitstatus}")
-      Roast::Support::Logger.error(output)
+      Roast::Helpers::Logger.error("Test runner exited with non-zero status: #{status.exitstatus}")
+      Roast::Helpers::Logger.error(output)
       exit(status.exitstatus)
     end
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "roast/support/logger"
+require "roast/helpers/logger"
 
 module Roast
   module Tools
@@ -20,9 +20,9 @@ module Roast
                 if ENV["DEBUG"]
                   result_lines = result.lines
                   if result_lines.size > 20
-                    Roast::Support::Logger.debug(result_lines.first(20).join + "\n...")
+                    Roast::Helpers::Logger.debug(result_lines.first(20).join + "\n...")
                   else
-                    Roast::Support::Logger.debug(result)
+                    Roast::Helpers::Logger.debug(result)
                   end
                 end
               end
@@ -32,7 +32,7 @@ module Roast
       end
 
       def call(path)
-        Roast::Support::Logger.info("📖 Reading file: #{path}\n")
+        Roast::Helpers::Logger.info("📖 Reading file: #{path}\n")
         if File.directory?(path)
           %x(ls -la #{path})
         else
@@ -40,8 +40,8 @@ module Roast
         end
       rescue StandardError => e
         "Error reading file: #{e.message}".tap do |error_message|
-          Roast::Support::Logger.error(error_message + "\n")
-          Roast::Support::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
+          Roast::Helpers::Logger.error(error_message + "\n")
+          Roast::Helpers::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
         end
       end
     end
