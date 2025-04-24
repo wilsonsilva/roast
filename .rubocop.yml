@@ -2,9 +2,11 @@ inherit_gem:
   rubocop-shopify: rubocop.yml
 
 AllCops:
-  TargetRubyVersion: 2.7
-  UseCache: true
   CacheRootDirectory: tmp
   Exclude:
     - 'bin/*'
-    - 'vendor/**/*'
+    - 'spec/fixtures/**/*'
+    - 'test/fixtures/**/*'
+  SuggestExtensions: false
+  TargetRubyVersion: 3.4
+  UseCache: true

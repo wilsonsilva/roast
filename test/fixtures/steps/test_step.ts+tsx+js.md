@@ -1,0 +1,1 @@
+JavaScript-specific step prompt content

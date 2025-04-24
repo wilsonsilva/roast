@@ -1,0 +1,47 @@
+# frozen_string_literal: true
+
+require "open3"
+
+class RunCoverage < Roast::Workflow::BaseStep
+  def call
+    # Run the test with coverage analysis
+    run_test_with_coverage
+  end
+
+  private
+
+  def run_test_with_coverage
+    subject_file = workflow.output["read_dependencies"]
+    subject_file = subject_file.match(%r{<sut>(.*?)</sut>})&.[](1) || subject_file
+    test_file = workflow.file
+    extension = File.extname(test_file).gsub(".", "")
+
+    # Handle JS/TS test files
+    extension = "js" if ["js", "jsx", "ts", "tsx"].include?(extension)
+
+    # Get the absolute path to the test_runner executable
+    test_runner_path = File.expand_path("../../bin/#{extension}_test_runner", __dir__)
+
+    # Make sure the test_runner executable exists
+    unless File.exist?(test_runner_path)
+      Roast::Support::Logger.error("Test runner executable not found: #{test_runner_path}")
+      exit(1)
+    end
+
+    # Resolve paths to prevent issues when pwd differs from project root
+    resolved_subject_file = Roast::Support::PathResolver.resolve(subject_file)
+    resolved_test_file = Roast::Support::PathResolver.resolve(test_file)
+
+    # Run the test_runner using shadowenv for environment consistency
+    command = "shadowenv exec --dir . -- #{test_runner_path} #{resolved_subject_file} #{resolved_test_file}"
+    output, status = Open3.capture2(command)
+
+    unless status.success?
+      Roast::Support::Logger.error("Test runner exited with non-zero status: #{status.exitstatus}")
+      Roast::Support::Logger.error(output)
+      exit(status.exitstatus)
+    end
+
+    output
+  end
+end

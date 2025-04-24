@@ -1,0 +1,46 @@
+name: Grading current test changes
+
+tools:
+  - Roast::Tools::Grep
+  - Roast::Tools::ReadFile
+  - Roast::Tools::SearchFile
+
+each: '% cd $(git rev-parse --show-toplevel) && git status --porcelain | grep "_test\.rb" | cut -c4- | xargs realpath'
+
+steps:
+  - read_dependencies
+  - run_coverage
+  -
+    - analyze_coverage
+    - verify_test_helpers
+    - verify_mocks_and_stubs
+  - generate_grades
+  - calculate_final_grade
+  - format_result
+  - generate_recommendations
+  - annotate_pr_with_comments
+
+# set non-default attributes for steps below
+analyze_coverage:
+  model: gpt-4.1-mini
+  loop: false
+  json: true
+  
+generate_grades:
+  model: o3
+  json: true
+
+generate_recommendations:
+  model: o3
+  loop: false
+  json: true
+  params:
+    max_completion_tokens: 5_000
+
+annotate_pr_with_comments:
+  tools:
+    - Roast::Tools::Github::Annotator
+  model: o3
+  params:
+    max_completion_tokens: 5_000
+  if: "workflow.pr? && output.recommendations.any?"

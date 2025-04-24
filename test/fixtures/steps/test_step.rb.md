@@ -1,0 +1,1 @@
+Ruby-specific step prompt content

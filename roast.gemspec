@@ -10,8 +10,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Shopify"]
   spec.email         = ["opensource@shopify.com"]
 
-  spec.summary       = "A way to create structured AI workflows in Ruby"
-  spec.description   = "Roast is a Ruby library for creating structured AI workflows and integrating with AI services"
+  spec.summary       = "A framework for executing structured AI workflows in Ruby"
+  spec.description   = "Roast is a Ruby library for running structured AI workflows along with many building blocks for creating and executing them"
   spec.homepage      = "https://github.com/Shopify/roast"
   spec.license       = "MIT"
 
@@ -37,8 +37,9 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency("cli-kit", "~> 5.0.1")
-  spec.add_dependency("cli-ui", "~> 2.3.1")
+  spec.add_dependency("activesupport", "~> 8.0")
   spec.add_dependency("faraday-retry")
   spec.add_dependency("json-schema")
+  spec.add_dependency("raix", "~> 0.8")
+  spec.add_dependency("thor", "~> 1.3")
 end

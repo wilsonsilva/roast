@@ -1,6 +1,6 @@
 {
     "type": "object",
-    "required": ["name", "tools", "inputs", "steps"],
+    "required": ["name", "tools", "steps"],
     "properties": {
       "name": {
         "type": "string"

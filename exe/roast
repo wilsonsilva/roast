@@ -13,6 +13,5 @@ unshift_path.call("lib")
 require "bundler/setup"
 require "roast"
 
-exit(Roast::ErrorHandler.call do
-  Roast::EntryPoint.call(ARGV.dup)
-end)
+puts "🔥🔥🔥 Everyone loves a good roast 🔥🔥🔥\n\n"
+Roast::CLI.start(ARGV)

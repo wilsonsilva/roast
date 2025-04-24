@@ -1,0 +1,1 @@
+TypeScript/TSX combined prompt content
