@@ -1,25 +1,26 @@
+![image](https://github.com/user-attachments/assets/39589441-d15a-452b-b51c-3bf28f470308)
+
 # Roast
 
-A Ruby library for creating structured AI workflows.
+A convention-oriented framework for creating structured AI workflows, maintained by the Augmented Engineering team at Shopify.
+
+## Why you should use Roast
+TBD
+
+## What does it look like?
+TBD
+
+## How to use Roast
+TBD
 
 ## Installation
 ```
 $ gem install roast
 ```
 
-## Usage
-
-TODO: Write usage instructions here
-
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/Shopify/roast.
+After checking out the repo, run `bundle install` to install dependencies. Then, run `bundle exec rake` to run the tests and linter. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 ## License
 
