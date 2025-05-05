@@ -7,10 +7,8 @@ require "json"
 
 RSpec.describe(Roast::Workflow::Validator) do
   let(:schema_path) { File.join(Dir.pwd, "schema/workflow.json") }
-  let(:valid_yaml_path) { File.join(Dir.pwd, "spec/fixtures/valid_workflow.yml") }
-  let(:invalid_yaml_path) { File.join(Dir.pwd, "spec/fixtures/invalid_workflow.yml") }
-  let(:valid_yaml) { File.read(valid_yaml_path) }
-  let(:invalid_yaml) { File.read(invalid_yaml_path) }
+  let(:valid_yaml) { fixture_file_content("valid_workflow.yml") }
+  let(:invalid_yaml) { fixture_file_content("invalid_workflow.yml") }
 
   describe "#initialize" do
     it "initializes with valid YAML" do

@@ -1,0 +1,4 @@
+name: Test with Glob
+target: spec/**/*_spec.rb
+steps:
+  - step1

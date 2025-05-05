@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dotenv"
-require "pry"
 require "raix"
 require "roast"
 require "vcr"
@@ -37,7 +36,14 @@ Raix.configure do |config|
   end
 end
 
+# Load support files
+Dir[File.join(File.dirname(__FILE__), "support", "**", "*.rb")].each { |f| require f }
+
 RSpec.configure do |config|
+  # Include fixture helpers
+  config.include(FixtureHelpers)
+  config.include(TestFixtureHelpers)
+
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
 
@@ -56,5 +62,18 @@ RSpec.configure do |config|
   config.after(:example, :novcr) do
     VCR.turn_on!
     WebMock.enable!
+  end
+
+  # Ensure we're in a valid directory before each test
+  config.before(:each) do
+    @original_dir ||= Dir.pwd
+  end
+
+  # Restore directory after each test
+  config.after(:each) do
+    Dir.pwd
+  rescue Errno::ENOENT
+    # If current directory is invalid, restore to original
+    Dir.chdir(@original_dir) if @original_dir && Dir.exist?(@original_dir)
   end
 end

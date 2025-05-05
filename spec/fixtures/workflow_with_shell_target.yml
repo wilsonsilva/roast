@@ -1,0 +1,4 @@
+name: Test with Target
+target: $(echo test.rb)
+steps:
+  - step1

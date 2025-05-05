@@ -1,0 +1,117 @@
+# frozen_string_literal: true
+
+require "open3"
+require "yaml"
+
+module Roast
+  module Workflow
+    # Encapsulates workflow configuration data and provides structured access
+    # to the configuration settings
+    class Configuration
+      attr_reader :config_hash, :workflow_path, :name, :steps, :tools, :function_configs
+      attr_accessor :target
+
+      def initialize(workflow_path, options = {})
+        @workflow_path = workflow_path
+        @config_hash = YAML.load_file(workflow_path)
+
+        # Extract key configuration values
+        @name = @config_hash["name"] || File.basename(workflow_path, ".yml")
+        @steps = @config_hash["steps"] || []
+
+        # Process tools configuration
+        parse_tools
+
+        # Process function-specific configurations
+        parse_functions
+
+        # Read the target parameter
+        @target = options[:target] || @config_hash["target"]
+
+        # Process the target command if it's a shell command
+        @target = process_target(@target) if has_target?
+      end
+
+      def context_path
+        @context_path ||= File.dirname(workflow_path)
+      end
+
+      def basename
+        @basename ||= File.basename(workflow_path, ".yml")
+      end
+
+      def has_target?
+        !target.nil? && !target.empty?
+      end
+
+      def get_step_config(step_name)
+        @config_hash[step_name] || {}
+      end
+
+      def find_step_index(steps, target_step)
+        steps.each_with_index do |step, index|
+          step_name = extract_step_name(step)
+          if step_name.is_a?(Array)
+            # For arrays (parallel steps), check if target is in the array
+            return index if step_name.flatten.include?(target_step)
+          elsif step_name == target_step
+            return index
+          end
+        end
+        nil
+      end
+
+      # Returns an array of all tool class names
+      def parse_tools
+        # Only support array format: ["Roast::Tools::Grep", "Roast::Tools::ReadFile"]
+        @tools = @config_hash["tools"] || []
+      end
+
+      # Parse function-specific configurations
+      def parse_functions
+        @function_configs = @config_hash["functions"] || {}
+      end
+
+      # Get configuration for a specific function
+      # @param function_name [String, Symbol] The name of the function (e.g., 'grep', 'search_file')
+      # @return [Hash] The configuration for the function or empty hash if not found
+      def function_config(function_name)
+        @function_configs[function_name.to_s] || {}
+      end
+
+      private
+
+      def process_target(command)
+        # If it's a bash command with the new $(command) syntax
+        if command =~ /^\$\((.*)\)$/
+          return Open3.capture2e({}, ::Regexp.last_match(1)).first.strip
+        end
+
+        # Legacy % prefix for backward compatibility
+        if command.start_with?("% ")
+          return Open3.capture2e({}, *command.split(" ")[1..-1]).first.strip
+        end
+
+        # If it's a glob pattern, return the full paths of the files it matches
+        if command.include?("*")
+          return Dir.glob(command).map { |file| File.expand_path(file) }.join("\n")
+        end
+
+        # assumed to be a direct file path(s)
+        File.expand_path(command)
+      end
+
+      def extract_step_name(step)
+        case step
+        when String
+          step
+        when Hash
+          step.keys.first
+        when Array
+          # For arrays, we'll need special handling as they contain multiple steps
+          step.map { |s| extract_step_name(s) }
+        end
+      end
+    end
+  end
+end

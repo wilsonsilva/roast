@@ -8,3 +8,6 @@
 /tmp/
 .CLAUDE.local.md
 .rspec_status
+**/.claude/settings.local.json
+
+**/CLAUDE.local.md

@@ -1,37 +1,8 @@
 name: My Workflow
-tools:
-- tool1
-- tool2
-inputs:
-- api_key?: Enter API Key
-- stdin
-- source-file
-- test-file!
-- some-fixed-input: some fixed input
-- shell: ls -la
+tools: 
+  - tool1
+  - tool2
 steps:
-- first_step
-- - nested_step_1
-  - steps:
-    - nested_step_2
-    - nested_step_3
-  - steps:
-    - nested_step_4
-    - nested_step_5
-- proceed?:
-    'true':
-    - proceed_step1
-    - proceed_step2
-    - - steps:
-        - proceed_step3
-        - proceed_step4
-      - proceed_step_5
-    'false':
-    - skip_step1
-    - skip_step2
-    - - steps:
-        - skip_step3
-        - skip_step4
-      - skip_step_5
-proceed?:
-  label: Do you wish to continue?
+  - first_step
+  - nested_step_1
+  - nested_step_2
