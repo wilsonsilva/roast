@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    roast (0.1.0)
+    roast-ai (0.1.0)
       activesupport (~> 8.0)
       faraday-retry
       json-schema
@@ -184,7 +184,7 @@ DEPENDENCIES
   mocha
   pry
   rake
-  roast!
+  roast-ai!
   rspec
   rubocop-shopify
   vcr
