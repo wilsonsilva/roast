@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "roast/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "roast"
+  spec.name          = "roast-ai"
   spec.version       = Roast::VERSION
   spec.authors       = ["Shopify"]
   spec.email         = ["opensource@shopify.com"]
@@ -18,8 +18,7 @@ Gem::Specification.new do |spec|
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
   if spec.respond_to?(:metadata)
-    spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
-
+    spec.metadata["allowed_push_host"] = "https://rubygems.org"
     spec.metadata["homepage_uri"] = spec.homepage
     spec.metadata["source_code_uri"] = "https://github.com/Shopify/roast"
     spec.metadata["changelog_uri"] = "https://github.com/Shopify/roast/blob/main/CHANGELOG.md"
