@@ -18,6 +18,7 @@ jobs:
         os: [ubuntu]
         ruby: ['3.3', 'ruby-head']
     runs-on: ${{ matrix.os }}-latest
+    continue-on-error: ${{ matrix.ruby == 'ruby-head' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
