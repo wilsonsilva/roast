@@ -172,7 +172,7 @@ tools:
   - Roast::Tools::WriteFile
   
 # Dynamic API token using shell command
-api_token: $(dev llm-gateway print-token --key)
+api_token: $(cat ~/.my_token)
 
 # Option 1: Use a targetless workflow with API logic in steps
 steps:
