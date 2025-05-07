@@ -22,6 +22,7 @@ module Roast
         @files = files
         include_tools
         load_roast_initializers
+        configure_api_client
       end
 
       def begin!
@@ -53,7 +54,10 @@ module Roast
             parse(configuration.steps)
           end
         else
-          $stdout.puts "🚫 ERROR: No files or target provided! 🚫"
+          # Handle targetless workflow - run once without a specific target
+          $stderr.puts "Running targetless workflow"
+          setup_workflow(nil, name:, context_path:)
+          parse(configuration.steps)
         end
       ensure
         execution_time = Time.now - start_time
@@ -68,9 +72,13 @@ module Roast
       private
 
       def setup_workflow(file, name:, context_path:)
-        @current_workflow = BaseWorkflow.new(file, name:, context_path:).tap do |workflow|
+        @current_workflow = BaseWorkflow.new(
+          file,
+          name: name,
+          context_path: context_path,
+          resource: configuration.resource,
+        ).tap do |workflow|
           workflow.output_file = options[:output] if options[:output].present?
-          workflow.subject_file = options[:subject] if options[:subject].present?
           workflow.verbose = options[:verbose] if options[:verbose].present?
         end
       end
@@ -97,6 +105,32 @@ module Roast
       rescue => e
         Roast::Helpers::Logger.error("Error loading initializers: #{e.message}")
         # Don't fail the workflow if initializers can't be loaded
+      end
+
+      def configure_api_client
+        return unless configuration.api_token
+
+        begin
+          require "raix"
+
+          # Configure OpenAI client with the token
+          $stderr.puts "Configuring API client with token from workflow"
+
+          # Initialize the OpenAI client if it doesn't exist
+          if defined?(Raix.configuration.openai_client)
+            # Create a new client with the token
+            Raix.configuration.openai_client = OpenAI::Client.new(access_token: configuration.api_token)
+          else
+            require "openai"
+
+            Raix.configure do |config|
+              config.openai_client = OpenAI::Client.new(access_token: configuration.api_token)
+            end
+          end
+        rescue => e
+          Roast::Helpers::Logger.error("Error configuring API client: #{e.message}")
+          # Don't fail the workflow if client can't be configured
+        end
       end
 
       def parse(steps)

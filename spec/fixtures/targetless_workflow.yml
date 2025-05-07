@@ -1,0 +1,8 @@
+name: Targetless Workflow
+tools: 
+  - Roast::Tools::Grep
+  - Roast::Tools::ReadFile
+steps:
+  - fetch_data
+  - process_results
+  - generate_report

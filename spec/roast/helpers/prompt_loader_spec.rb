@@ -41,5 +41,27 @@ RSpec.describe(Roast::Helpers::PromptLoader) do
       result = described_class.load_prompt(workflow, test_file)
       expect(result).to(include("class RoastTest < Minitest::Test"))
     end
+
+    context "with nil target file" do
+      before do
+        allow(described_class).to(receive(:new).and_return(
+          instance_double(
+            described_class,
+            load: "Default prompt without file extension",
+          ),
+        ))
+      end
+
+      it "handles nil target file" do
+        workflow_double = instance_double(
+          Roast::Workflow::BaseWorkflow,
+          name: "workflow",
+          context_path: "/some/path",
+        )
+
+        result = described_class.load_prompt(workflow_double, nil)
+        expect(result).to(eq("Default prompt without file extension"))
+      end
+    end
   end
 end

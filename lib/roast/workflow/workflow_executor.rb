@@ -35,12 +35,21 @@ module Roast
 
       def execute_step(name)
         start_time = Time.now
-        ActiveSupport::Notifications.instrument("roast.step.start", { step_name: name })
-        $stderr.puts "Executing: #{name}"
+        # For tests, make sure that we handle this gracefully
+        resource_type = workflow.respond_to?(:resource) ? workflow.resource&.type : nil
+
+        ActiveSupport::Notifications.instrument("roast.step.start", {
+          step_name: name,
+          resource_type: resource_type,
+        })
+
+        $stderr.puts "Executing: #{name} (Resource type: #{resource_type || "unknown"})"
 
         result = if name.starts_with?("%") || name.starts_with?("$(")
           strip_and_execute(name)
-        elsif name.include?("*")
+        elsif name.include?("*") && (!workflow.respond_to?(:resource) || !workflow.resource)
+          # Only use the glob method if we don't have a resource object yet
+          # This is for backward compatibility
           glob(name)
         else
           step_object = find_and_load_step(name)
@@ -53,6 +62,7 @@ module Roast
 
         ActiveSupport::Notifications.instrument("roast.step.complete", {
           step_name: name,
+          resource_type: resource_type,
           success: true,
           execution_time: execution_time,
           result_size: result.to_s.length,
@@ -64,6 +74,7 @@ module Roast
 
         ActiveSupport::Notifications.instrument("roast.step.error", {
           step_name: name,
+          resource_type: resource_type,
           error: e.class.name,
           message: e.message,
           execution_time: execution_time,
@@ -129,8 +140,15 @@ module Roast
       def setup_step(step_class, step_name, context_path)
         step_class.new(workflow, name: step_name, context_path: context_path).tap do |step|
           step_config = config_hash[step_name]
+
+          # Always set the model, even if there's no step_config
+          # Use step-specific model if defined, otherwise use workflow default model, or fallback to DEFAULT_MODEL
+          step.model = step_config&.dig("model") || config_hash["model"] || DEFAULT_MODEL
+
+          # Pass resource to step if supported
+          step.resource = workflow.resource if step.respond_to?(:resource=)
+
           if step_config.present?
-            step.model = step_config["model"] || DEFAULT_MODEL
             step.print_response = step_config["print_response"] if step_config["print_response"].present?
             step.loop = step_config["loop"] if step_config["loop"].present?
             step.json = step_config["json"] if step_config["json"].present?

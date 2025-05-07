@@ -16,8 +16,24 @@ RSpec.describe(Roast::Workflow::ConfigurationParser) do
 
   describe "#begin!" do
     context "without files or target" do
-      it "outputs error message when no files or target provided" do
-        expect { parser.begin! }.to(output(/ERROR: No files or target provided!/).to_stdout)
+      it "runs as a targetless workflow" do
+        # Mock the setup and execution to avoid ERB errors
+        executor = instance_double(Roast::Workflow::WorkflowExecutor)
+        allow(Roast::Workflow::WorkflowExecutor).to(receive(:new).and_return(executor))
+        allow(executor).to(receive(:execute_steps))
+
+        # Allow proper setup of the workflow
+        workflow = instance_double(
+          Roast::Workflow::BaseWorkflow,
+          output: {},
+          final_output: "",
+          output_file: nil,
+        )
+        allow(Roast::Workflow::BaseWorkflow).to(receive(:new).and_return(workflow))
+        allow(workflow).to(receive(:output_file=))
+        allow(workflow).to(receive(:verbose=))
+
+        expect { parser.begin! }.to(output(/Running targetless workflow/).to_stderr)
       end
     end
 
