@@ -45,6 +45,54 @@ RSpec.describe(Roast::Workflow::WorkflowExecutor) do
   end
 
   describe "#execute_step" do
+    context "with instrumentation" do
+      let(:events) { [] }
+
+      before do
+        ActiveSupport::Notifications.subscribe(/roast\.step\./) do |name, _start, _finish, _id, payload|
+          events << { name: name, payload: payload }
+        end
+      end
+
+      after do
+        ActiveSupport::Notifications.unsubscribe(/roast\.step\./)
+      end
+
+      it "instruments step execution" do
+        step_obj = double("step")
+        allow(step_obj).to(receive(:call).and_return("result"))
+        allow(executor).to(receive(:find_and_load_step).and_return(step_obj))
+
+        executor.execute_step("test_step")
+
+        start_event = events.find { |e| e[:name] == "roast.step.start" }
+        complete_event = events.find { |e| e[:name] == "roast.step.complete" }
+
+        expect(start_event).not_to(be_nil)
+        expect(start_event[:payload][:step_name]).to(eq("test_step"))
+
+        expect(complete_event).not_to(be_nil)
+        expect(complete_event[:payload][:step_name]).to(eq("test_step"))
+        expect(complete_event[:payload][:success]).to(be(true))
+        expect(complete_event[:payload][:execution_time]).to(be_a(Float))
+        expect(complete_event[:payload][:result_size]).to(be_a(Integer))
+      end
+
+      it "instruments step errors" do
+        allow(executor).to(receive(:find_and_load_step)).and_raise(StandardError.new("test error"))
+
+        expect { executor.execute_step("failing_step") }.to(raise_error(StandardError))
+
+        error_event = events.find { |e| e[:name] == "roast.step.error" }
+
+        expect(error_event).not_to(be_nil)
+        expect(error_event[:payload][:step_name]).to(eq("failing_step"))
+        expect(error_event[:payload][:error]).to(eq("StandardError"))
+        expect(error_event[:payload][:message]).to(eq("test error"))
+        expect(error_event[:payload][:execution_time]).to(be_a(Float))
+      end
+    end
+
     context "with % prefix" do
       it "executes shell command" do
         expect(executor).to(receive(:strip_and_execute).with("%ls").and_return("file1\nfile2"))

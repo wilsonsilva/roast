@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require "active_support"
+require "active_support/isolated_execution_state"
+require "active_support/notifications"
+
 module Roast
   module Workflow
     # Handles the execution of workflow steps, including orchestration and threading
@@ -30,16 +34,41 @@ module Roast
       end
 
       def execute_step(name)
+        start_time = Time.now
+        ActiveSupport::Notifications.instrument("roast.step.start", { step_name: name })
         $stderr.puts "Executing: #{name}"
-        return strip_and_execute(name) if name.starts_with?("%") || name.starts_with?("$(")
 
-        return glob(name) if name.include?("*")
+        result = if name.starts_with?("%") || name.starts_with?("$(")
+          strip_and_execute(name)
+        elsif name.include?("*")
+          glob(name)
+        else
+          step_object = find_and_load_step(name)
+          step_result = step_object.call
+          workflow.output[name] = step_result
+          step_result
+        end
 
-        step_object = find_and_load_step(name)
-        result = step_object.call
+        execution_time = Time.now - start_time
 
-        workflow.output[name] = result
+        ActiveSupport::Notifications.instrument("roast.step.complete", {
+          step_name: name,
+          success: true,
+          execution_time: execution_time,
+          result_size: result.to_s.length,
+        })
+
         result
+      rescue => e
+        execution_time = Time.now - start_time
+
+        ActiveSupport::Notifications.instrument("roast.step.error", {
+          step_name: name,
+          error: e.class.name,
+          message: e.message,
+          execution_time: execution_time,
+        })
+        raise
       end
 
       private

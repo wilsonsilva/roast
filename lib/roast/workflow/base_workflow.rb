@@ -2,6 +2,9 @@
 
 require "raix/chat_completion"
 require "raix/function_dispatch"
+require "active_support"
+require "active_support/isolated_execution_state"
+require "active_support/notifications"
 
 module Roast
   module Workflow
@@ -38,6 +41,41 @@ module Roast
 
       def final_output
         @final_output.join("\n")
+      end
+
+      # Override chat_completion to add instrumentation
+      def chat_completion(**kwargs)
+        start_time = Time.now
+        model = kwargs[:openai] || "default"
+
+        ActiveSupport::Notifications.instrument("roast.chat_completion.start", {
+          model: model,
+          parameters: kwargs.except(:openai),
+        })
+
+        result = super(**kwargs)
+        execution_time = Time.now - start_time
+
+        ActiveSupport::Notifications.instrument("roast.chat_completion.complete", {
+          success: true,
+          model: model,
+          parameters: kwargs.except(:openai),
+          execution_time: execution_time,
+          response_size: result.to_s.length,
+        })
+
+        result
+      rescue => e
+        execution_time = Time.now - start_time
+
+        ActiveSupport::Notifications.instrument("roast.chat_completion.error", {
+          error: e.class.name,
+          message: e.message,
+          model: model,
+          parameters: kwargs.except(:openai),
+          execution_time: execution_time,
+        })
+        raise
       end
 
       private
