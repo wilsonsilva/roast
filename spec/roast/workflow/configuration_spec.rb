@@ -32,6 +32,31 @@ RSpec.describe(Roast::Workflow::Configuration) do
         end
       end
     end
+
+    context "when api_token is provided" do
+      # Create a temporary workflow file with api_token
+      let(:workflow_path) { fixture_file("workflow_with_api_token.yml") }
+
+      before do
+        # Create fixture with api_token
+        File.write(workflow_path, {
+          "name" => "Workflow with API Token",
+          "steps" => ["step1"],
+          "api_token" => "$(echo test_token)",
+        }.to_yaml)
+
+        # Stub Open3 to return a test token
+        allow(Open3).to(receive(:capture2e).with({}, "echo test_token").and_return(["test_token\n", double(success?: true)]))
+      end
+
+      after do
+        File.delete(workflow_path) if File.exist?(workflow_path)
+      end
+
+      it "processes shell command to get api_token" do
+        expect(configuration.api_token).to(eq("test_token"))
+      end
+    end
   end
 
   describe "#find_step_index" do

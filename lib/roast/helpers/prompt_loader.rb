@@ -74,6 +74,8 @@ module Roast
       end
 
       def extract_file_extensions
+        return [] if target_file.nil?
+
         file_basename = File.basename(target_file)
 
         if file_basename.end_with?(".md") && file_basename.count(".") > 1

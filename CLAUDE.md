@@ -12,6 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Run single test: `bundle exec rspec spec/path/to/test_file.rb`
 - Lint: `bundle exec rubocop -A`
 - Default (tests + lint): `bundle exec rake`
+- Run all tests plus rubocop: `bundle exec rake`
 
 ## Tech stack
 - `cli-kit` and `cli-ui` for the CLI tool
@@ -29,3 +30,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Define class methods inside `class << self; end` declarations.
 - Add runtime dependencies to `roast.gemspec`.
 - Add development dependencies to `Gemfile`.
+- Don't ever test private methods directly. Specs should test behavior, not implementation.

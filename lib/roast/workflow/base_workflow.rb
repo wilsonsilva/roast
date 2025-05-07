@@ -14,23 +14,20 @@ module Roast
       attr_accessor :file,
         :concise,
         :output_file,
-        :subject_file,
         :verbose,
         :name,
         :context_path,
-        :output
+        :output,
+        :resource
 
-      def initialize(file, subject_file = nil, name: nil, context_path: nil)
+      def initialize(file = nil, name: nil, context_path: nil, resource: nil)
         @file = file
-        @subject_file = subject_file
         @name = name || self.class.name.underscore.split("/").last
         @context_path = context_path || determine_context_path
         @final_output = []
         @output = {}
+        @resource = resource || Roast::Resources.for(file)
         transcript << { system: read_sidecar_prompt }
-        unless subject_file.blank?
-          transcript << { user: read_subject_file }
-        end
         Roast::Tools.setup_interrupt_handler(transcript)
         Roast::Tools.setup_exit_handler(self)
       end
@@ -103,14 +100,6 @@ module Roast
 
       def read_sidecar_prompt
         Roast::Helpers::PromptLoader.load_prompt(self, file)
-      end
-
-      def read_subject_file
-        [
-          "# SUT (Subject Under Test)",
-          "# #{subject_file}",
-          File.read(subject_file),
-        ].join("\n")
       end
     end
   end

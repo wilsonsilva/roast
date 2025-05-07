@@ -20,6 +20,14 @@ RSpec.describe(Roast::Workflow::BaseWorkflow) do
       expect(workflow.transcript).to(eq([{ system: "Test prompt" }]))
       expect(Roast::Tools).to(have_received(:setup_interrupt_handler))
     end
+
+    it "initializes with nil file for targetless workflows" do
+      workflow = described_class.new(nil)
+
+      expect(workflow.file).to(be_nil)
+      expect(workflow.transcript).to(eq([{ system: "Test prompt" }]))
+      expect(Roast::Tools).to(have_received(:setup_interrupt_handler))
+    end
   end
 
   describe "#append_to_final_output and #final_output" do

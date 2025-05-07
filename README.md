@@ -8,12 +8,15 @@ A convention-oriented framework for creating structured AI workflows, maintained
 
 Roast provides a structured, declarative approach to building AI workflows with:
 
-- **Convention over configuration**: Define workflows using simple YAML files with step-by-step instructions
+- **Convention over configuration**: Define powerful workflows using simple YAML configuration files and prompts written in markdown (with ERB support)
 - **Built-in tools**: Ready-to-use tools for file operations, search, and AI interactions
-- **Parallel execution**: Run multiple steps concurrently to speed up workflows
+- **Ruby integration**: When prompts aren't enough, write custom steps in Ruby using a clean, extensible architecture
+- **Shared context**: Each step shares its conversation transcript with its parent workflow by default
+- **Step customization**: Steps can be fully configured with their own AI models and parameters.
+- **Session replay**: Rerun previous sessions starting at a specified step to speed up development time
+- **Parallel execution**: Run multiple steps concurrently to speed up workflow execution
+- **Function caching:**: Flexibly cache the results of tool function calls to speed up workflows
 - **Extensive instrumentation**: Monitor and track workflow execution, AI calls, and tool usage ([see instrumentation documentation](docs/INSTRUMENTATION.md))
-- **Step isolation**: Each step runs in its own context with configurable AI models and parameters
-- **Ruby integration**: Native Ruby support with a clean, extensible architecture
 
 ## What does it look like?
 
@@ -21,6 +24,8 @@ Here's a simple workflow that analyzes test files:
 
 ```yaml
 name: analyze_tests
+# Default model for all steps
+model: gpt-4o-mini
 tools:
   - Roast::Tools::ReadFile
   - Roast::Tools::Grep
@@ -30,8 +35,9 @@ steps:
   - analyze_coverage
   - generate_report
 
+# Step-specific model overrides the global model
 analyze_coverage:
-  model: gpt-4-mini
+  model: gpt-4-turbo
   json: true
 ```
 
@@ -54,43 +60,95 @@ steps:
 3. Run the workflow:
 
 ```bash
+# With a target file
 roast execute workflow.yml target_file.rb
+
+# Or for a targetless workflow (API calls, data generation, etc.)
+roast execute workflow.yml
 ```
 
 ### Understanding Workflows
 
-In Roast, workflows maintain a single conversation with the AI model throughout execution. Each step represents one or more user-assistant interactions within this conversation, with optional tool calls. All steps share context through:
+In Roast, workflows maintain a single conversation with the AI model throughout execution. Each step represents one or more user-assistant interactions within this conversation, with optional tool calls. Steps naturally build upon each other through the shared context.
 
-1. A continuous conversation history 
-2. A shared output hash that acts as a "scratchpad" for passing data between steps
+#### Data Flow Between Steps
 
-This means steps can reference results from previous steps and build upon earlier work.
+Roast handles data flow between steps in two primary ways:
+
+1. **Conversation Context (Implicit)**: The LLM naturally remembers the entire conversation history, including all previous prompts and responses. In most cases, this is all you need for a step to reference and build upon previous results. This is the preferred approach for most prompt-oriented workflows.
+
+2. **Output Hash (Explicit)**: Each step's result is automatically stored in the `workflow.output` hash using the step name as the key. This programmatic access is mainly useful when:
+   - You need to perform non-LLM transformations on data
+   - You're writing custom output logic
+   - You need to access specific values for presentation or logging
+
+For typical AI workflows, the continuous conversation history provides seamless data flow without requiring explicit access to the output hash. Steps can simply refer to previous information in their prompts, and the AI model will use its memory of the conversation to provide context-aware responses.
 
 ### Command Line Options
 
 #### Basic Options
-- `-c, --concise`: Use concise output templates
-- `-o, --output FILE`: Save results to a file  
+- `-o, --output FILE`: Save results to a file instead of outputting to STDOUT 
+- `-c, --concise`: Use concise output templates (exposed as a boolean flag on `workflow`)
 - `-v, --verbose`: Show output from all steps as they execute
-- `-s, --subject FILE`: Specify a subject file to analyze
 
 #### Target Option (`-t, --target`)
 
 The target option is highly flexible and accepts several formats:
 
-**File paths:**
+**Single file path:**
 ```bash
 roast execute workflow.yml -t path/to/file.rb
+
+# is equivalent to
+roast execute workflow.yml path/to/file.rb
+```
+
+**Directory path:**
+```bash
+roast execute workflow.yml -t path/to/directory
+
+# Roast will run on the directory as a resource
 ```
 
 **Glob patterns:**
 ```bash
 roast execute workflow.yml -t "**/*_test.rb"
+
+# Roast will run the workflow on each matching file
+```
+
+**URL as target:**
+```bash
+roast execute workflow.yml -t "https://api.example.com/data"
+
+# Roast will run the workflow using the URL as a resource
+```
+
+**API configuration (Fetch API-style):**
+```bash
+roast execute workflow.yml -t '{
+  "url": "https://api.example.com/resource",
+  "options": {
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer ${API_TOKEN}"
+    },
+    "body": {
+      "query": "search term",
+      "limit": 10
+    }
+  }
+}'
+
+# Roast will recognize this as an API configuration with Fetch API-style format
 ```
 
 **Shell command execution with $(...):**
 ```bash
 roast execute workflow.yml -t "$(find . -name '*.rb' -mtime -1)"
+
+# Roast will run the workflow on each file returned (expects one per line)
 ```
 
 **Git integration examples:**
@@ -101,6 +159,90 @@ roast execute workflow.yml -t "$(git diff --name-only HEAD | grep _test.rb)"
 # Process staged files  
 roast execute workflow.yml -t "$(git diff --cached --name-only)"
 ```
+
+#### Targetless Workflows
+
+Roast also supports workflows that don't operate on a specific pre-defined set of target files:
+
+**API-driven workflows:**
+```yaml
+name: API Integration Workflow
+tools:
+  - Roast::Tools::ReadFile
+  - Roast::Tools::WriteFile
+  
+# Dynamic API token using shell command
+api_token: $(dev llm-gateway print-token --key)
+
+# Option 1: Use a targetless workflow with API logic in steps
+steps:
+  - fetch_api_data  # Step will make API calls
+  - transform_data
+  - generate_report
+
+# Option 2: Specify an API target directly in the workflow
+target: '{
+  "url": "https://api.example.com/resource",
+  "options": {
+    "method": "GET",
+    "headers": {
+      "Authorization": "Bearer ${API_TOKEN}"
+    }
+  }
+}'
+
+steps:
+  - process_api_response
+  - generate_report
+```
+
+**Data generation workflows:**
+```yaml
+name: Generate Documentation
+tools:
+  - Roast::Tools::WriteFile
+steps:
+  - generate_outline
+  - write_documentation
+  - create_examples
+```
+
+These targetless workflows are ideal for:
+- API integrations
+- Content generation
+- Report creation
+- Interactive tools
+- Scheduled automation tasks
+
+#### Global Model Configuration
+
+You can set a default model for all steps in your workflow by specifying the `model` parameter at the top level:
+
+```yaml
+name: My Workflow
+model: gpt-4o-mini  # Will be used for all steps unless overridden
+```
+
+Individual steps can override this setting with their own model parameter:
+
+```yaml
+analyze_data:
+  model: anthropic:claude-3-haiku  # Takes precedence over the global model
+```
+
+#### Dynamic API Tokens
+
+Roast allows you to dynamically fetch API tokens using shell commands directly in your workflow configuration:
+
+```yaml
+# This will execute the shell command and use the result as the API token
+api_token: $(print-token --key)
+
+# Or a simpler example for demonstration:
+api_token: $(echo $OPENAI_API_KEY)
+```
+
+This makes it easy to use environment-specific tokens without hardcoding credentials, especially useful in development environments or CI/CD pipelines.
 
 ### Template Output with ERB
 
@@ -119,28 +261,16 @@ Files analyzed: <%= workflow.file %>
 Status: <%= workflow.output['status'] || 'completed' %>
 ```
 
+This is an example of where the `workflow.output` hash is useful - formatting output for display based on data from previous steps.
+
 Available in templates:
 - `response`: The AI's response for this step
-- `workflow`: Access to the workflow object
-- `workflow.output`: The shared hash containing results from all previous steps
-- `workflow.file`: Current file being processed
+- `workflow`: Access to the workflow object 
+- `workflow.output`: The shared hash containing results from all steps when you need programmatic access
+- `workflow.file`: Current file being processed (or `nil` for targetless workflows)
 - All workflow configuration options
 
-## Installation
-
-```bash
-$ gem install roast
-```
-
-Or add to your Gemfile:
-
-```ruby
-gem 'roast'
-```
-
-## Development
-
-After checking out the repo, run `bundle install` to install dependencies. Then, run `bundle exec rake` to run the tests and linter. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+For most workflows, you'll mainly use `response` to access the current step's results. The `workflow.output` hash becomes valuable when you need to reference specific data points from previous steps in your templates or for conditional display logic.
 
 ## Advanced Features
 
@@ -218,6 +348,22 @@ your-project/
   │       └── custom_tools.rb
   └── ...
 ```
+
+## Installation
+
+```bash
+$ gem install roast
+```
+
+Or add to your Gemfile:
+
+```ruby
+gem 'roast'
+```
+
+## Development
+
+After checking out the repo, run `bundle install` to install dependencies. Then, run `bundle exec rake` to run the tests and linter. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 ## License
 

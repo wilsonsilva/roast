@@ -11,6 +11,18 @@
           "type": "string"
         }
       },
+      "target": {
+        "type": "string",
+        "description": "Optional target file, glob pattern, or shell command for the workflow to operate on"
+      },
+      "api_token": {
+        "type": "string",
+        "description": "Shell command to fetch an API token dynamically, e.g. $(dev llm-gateway print-token --key)"
+      },
+      "model": {
+        "type": "string",
+        "description": "Default AI model to use for all steps in the workflow"
+      },
       "inputs": {
         "type": "array",
         "items": {

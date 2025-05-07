@@ -8,7 +8,7 @@ module Roast
     class BaseStep
       extend Forwardable
 
-      attr_accessor :model, :print_response, :loop, :json, :params
+      attr_accessor :model, :print_response, :loop, :json, :params, :resource
       attr_reader :workflow, :name, :context_path
 
       def_delegator :workflow, :append_to_final_output
@@ -24,6 +24,7 @@ module Roast
         @loop = true
         @json = false
         @params = {}
+        @resource = workflow.resource if workflow.respond_to?(:resource)
       end
 
       def call
@@ -74,7 +75,15 @@ module Roast
       end
 
       def read_sidecar_prompt
-        Roast::Helpers::PromptLoader.load_prompt(self, workflow.file)
+        # For file resources, use the target path for prompt selection
+        # For other resource types, fall back to workflow.file
+        target_path = if resource&.type == :file
+          resource.target
+        else
+          workflow.file
+        end
+
+        Roast::Helpers::PromptLoader.load_prompt(self, target_path)
       end
 
       def process_sidecar_output(response)
