@@ -8,6 +8,7 @@ require "roast/tools/read_file"
 require "roast/tools/search_file"
 require "roast/tools/write_file"
 require "roast/tools/cmd"
+require "roast/tools/coding_agent"
 
 module Roast
   module Tools

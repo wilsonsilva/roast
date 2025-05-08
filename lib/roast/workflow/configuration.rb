@@ -32,7 +32,13 @@ module Roast
         @target = process_target(@target) if has_target?
 
         # Create the appropriate resource object for the target
-        @resource = Roast::Resources.for(@target)
+        if defined?(Roast::Resources)
+          @resource = if has_target?
+            Roast::Resources.for(@target)
+          else
+            Roast::Resources::NoneResource.new(nil)
+          end
+        end
 
         # Process API token if provided
         if @config_hash["api_token"]
@@ -59,8 +65,49 @@ module Roast
         @config_hash[step_name] || {}
       end
 
-      def find_step_index(steps, target_step)
-        steps.each_with_index do |step, index|
+      # Find the index of a step in the workflow steps array
+      # @param [Array] steps Optional - The steps array to search (defaults to self.steps)
+      # @param [String] target_step The name of the step to find
+      # @return [Integer, nil] The index of the step, or nil if not found
+      def find_step_index(steps_array = nil, target_step = nil)
+        # Handle different call patterns for backward compatibility
+        if steps_array.is_a?(String) && target_step.nil?
+          target_step = steps_array
+          steps_array = steps
+        elsif steps_array.is_a?(Array) && target_step.is_a?(String)
+          # This is the normal case - steps_array and target_step are provided
+        else
+          # Default to self.steps if just the target_step is provided
+          steps_array = steps
+        end
+
+        # First, try using the new more detailed search
+        steps_array.each_with_index do |step, index|
+          case step
+          when Hash
+            # Could be {name: command} or {name: {substeps}}
+            step_key = step.keys.first
+            return index if step_key == target_step
+          when Array
+            # This is a parallel step container, search inside it
+            found = step.any? do |substep|
+              case substep
+              when Hash
+                substep.keys.first == target_step
+              when String
+                substep == target_step
+              else
+                false
+              end
+            end
+            return index if found
+          when String
+            return index if step == target_step
+          end
+        end
+
+        # Fall back to the original method using extract_step_name
+        steps_array.each_with_index do |step, index|
           step_name = extract_step_name(step)
           if step_name.is_a?(Array)
             # For arrays (parallel steps), check if target is in the array
@@ -69,6 +116,7 @@ module Roast
             return index
           end
         end
+
         nil
       end
 
@@ -113,7 +161,11 @@ module Roast
 
         # If it's a glob pattern, return the full paths of the files it matches
         if processed.include?("*")
-          return Dir.glob(processed).map { |file| File.expand_path(file) }.join("\n")
+          matched_files = Dir.glob(processed)
+          # If no files match, return the pattern itself
+          return processed if matched_files.empty?
+
+          return matched_files.map { |file| File.expand_path(file) }.join("\n")
         end
 
         # For tests, if the command was already processed as a shell command and is simple,

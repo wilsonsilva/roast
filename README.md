@@ -71,6 +71,43 @@ roast execute workflow.yml
 
 In Roast, workflows maintain a single conversation with the AI model throughout execution. Each step represents one or more user-assistant interactions within this conversation, with optional tool calls. Steps naturally build upon each other through the shared context.
 
+#### Step Types
+
+Roast supports several types of steps:
+
+1. **Standard step**: References a directory containing at least a `prompt.md` and optional `output.txt` template. This is the most common type of step. 
+  ```yaml
+  steps:
+    - analyze_code
+  ```
+
+  As an alternative to a directory, you can also implement a custom step as a Ruby class, optionally extending `Roast::Workflow::BaseStep`.
+  
+  In the example given above, the script would live at `workflow/analyze_code.rb` and should contain a class named `AnalyzeCode` with an initializer that takes a workflow object as context, and a `call` method that will be invoked to run the step. The result of the `call` method will be stored in the `workflow.output` hash.
+
+
+2. **Parallel steps**: Groups of steps executed concurrently
+   ```yaml
+   steps:
+     - 
+       - analyze_code_quality
+       - check_test_coverage
+   ```
+
+3. **Command execution step**: Executes shell commands directly
+   ```yaml
+   steps:
+     - rubocop: $(bundle exec rubocop -A)
+   ```
+   This will execute the command and store the result in the workflow output hash under the key name (`rubocop` in this example).
+
+4. **Raw prompt step**: Simple text prompts for the model without tools
+   ```yaml
+   steps:
+     - Summarize the changes made to the codebase.
+   ```
+   This creates a simple prompt-response interaction without tool calls or looping. It's detected by the presence of spaces in the step name and is useful for summarization or simple questions at the end of a workflow.
+
 #### Data Flow Between Steps
 
 Roast handles data flow between steps in two primary ways:
@@ -90,6 +127,28 @@ For typical AI workflows, the continuous conversation history provides seamless 
 - `-o, --output FILE`: Save results to a file instead of outputting to STDOUT 
 - `-c, --concise`: Use concise output templates (exposed as a boolean flag on `workflow`)
 - `-v, --verbose`: Show output from all steps as they execute
+- `-r, --replay STEP_NAME`: Resume a workflow from a specific step, optionally with a specific session timestamp
+
+#### Session Replay
+
+The session replay feature allows you to resume workflows from specific steps, saving time during development and debugging:
+
+```bash
+# Resume from a specific step
+roast execute workflow.yml -r step_name
+
+# Resume from a specific step in a specific session
+roast execute workflow.yml -r 20250507_123456_789:step_name
+```
+
+Sessions are automatically saved during workflow execution. Each step's state, including the conversation transcript and output, is persisted to a session directory. The session directories are organized by workflow name and file, with timestamps for each run.
+
+This feature is particularly useful when:
+- Debugging specific steps in a long workflow
+- Iterating on prompts without rerunning the entire workflow
+- Resuming after failures in long-running workflows
+
+Sessions are stored in the `.roast/sessions/` directory in your project. Note that there is no automatic cleanup of session data, so you might want to periodically delete old sessions yourself.
 
 #### Target Option (`-t, --target`)
 

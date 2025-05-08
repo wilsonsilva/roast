@@ -8,20 +8,20 @@ module Roast
     class BaseStep
       extend Forwardable
 
-      attr_accessor :model, :print_response, :loop, :json, :params, :resource
+      attr_accessor :model, :print_response, :auto_loop, :json, :params, :resource
       attr_reader :workflow, :name, :context_path
 
       def_delegator :workflow, :append_to_final_output
       def_delegator :workflow, :chat_completion
       def_delegator :workflow, :transcript
 
-      def initialize(workflow, model: "anthropic:claude-3-7-sonnet", name: nil, context_path: nil)
+      def initialize(workflow, model: "anthropic:claude-3-7-sonnet", name: nil, context_path: nil, auto_loop: true)
         @workflow = workflow
         @model = model
         @name = name || self.class.name.underscore.split("/").last
         @context_path = context_path || determine_context_path
         @print_response = false
-        @loop = true
+        @auto_loop = auto_loop
         @json = false
         @params = {}
         @resource = workflow.resource if workflow.respond_to?(:resource)
@@ -29,15 +29,13 @@ module Roast
 
       def call
         prompt(read_sidecar_prompt)
-        chat_completion(print_response:, loop:, json:, params:)
+        chat_completion(print_response:, auto_loop:, json:, params:)
       end
 
       protected
 
-      def chat_completion(print_response: false, loop: true, json: false, params: {})
-        workflow.chat_completion(openai: model, loop:, json:, params:).tap do |response|
-          append_to_final_output(response) if print_response
-        end.then do |response|
+      def chat_completion(print_response: false, auto_loop: true, json: false, params: {})
+        workflow.chat_completion(openai: model, loop: auto_loop, json:, params:).then do |response|
           case response
           in Array
             response.map(&:presence).compact.join("\n")
@@ -45,7 +43,7 @@ module Roast
             response
           end
         end.tap do |response|
-          process_sidecar_output(response)
+          process_output(response, print_response:)
         end
       end
 
@@ -86,16 +84,13 @@ module Roast
         Roast::Helpers::PromptLoader.load_prompt(self, target_path)
       end
 
-      def process_sidecar_output(response)
-        # look for a file named output.txt.erb in the context path
-        # if found, render it with the response
-        # if not found, just return the response
-        # TODO: this can be a lot more sophisticated
-        # incorporating different file types, etc.
+      def process_output(response, print_response:)
         output_path = File.join(context_path, "output.txt")
-        if File.exist?(output_path)
+        if File.exist?(output_path) && print_response
           # TODO: use the workflow binding or the step?
           append_to_final_output(ERB.new(File.read(output_path), trim_mode: "-").result(binding))
+        elsif print_response
+          append_to_final_output(response)
         end
       end
     end

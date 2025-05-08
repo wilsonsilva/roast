@@ -93,10 +93,12 @@ RSpec.describe(Roast::Workflow::WorkflowExecutor) do
       end
     end
 
-    context "with % prefix" do
+    context "with $(bash expression)" do
       it "executes shell command" do
-        expect(executor).to(receive(:strip_and_execute).with("%ls").and_return("file1\nfile2"))
-        result = executor.execute_step("%ls")
+        expect(executor).to(receive(:strip_and_execute).with("$(ls)").and_return("file1\nfile2"))
+        expect(workflow).to(receive(:transcript).and_return([]))
+        expect(workflow).to(receive(:transcript).and_return([]))
+        result = executor.execute_step("$(ls)")
         expect(result).to(eq("file1\nfile2"))
       end
     end

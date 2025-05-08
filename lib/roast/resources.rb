@@ -29,6 +29,8 @@ module Roast
         UrlResource.new(target)
       when :api
         ApiResource.new(target)
+      when :command
+        CommandResource.new(target)
       when :none
         NoneResource.new(target)
       else
@@ -41,6 +43,11 @@ module Roast
     # @return [Symbol] :file, :directory, :url, :api, or :none
     def detect_type(target)
       return :none if target.nil? || target.strip.empty?
+
+      # Check for command syntax $(...)
+      if target.match?(/^\$\(.*\)$/)
+        return :command
+      end
 
       # Check for URLs
       if target.start_with?("http://", "https://", "ftp://")

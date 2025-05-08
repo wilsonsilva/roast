@@ -18,15 +18,21 @@ module Roast
         :name,
         :context_path,
         :output,
-        :resource
+        :resource,
+        :session_name,
+        :session_timestamp,
+        :configuration
 
-      def initialize(file = nil, name: nil, context_path: nil, resource: nil)
+      def initialize(file = nil, name: nil, context_path: nil, resource: nil, session_name: nil, configuration: nil)
         @file = file
         @name = name || self.class.name.underscore.split("/").last
         @context_path = context_path || determine_context_path
         @final_output = []
         @output = {}
         @resource = resource || Roast::Resources.for(file)
+        @session_name = session_name || @name
+        @session_timestamp = nil
+        @configuration = configuration
         transcript << { system: read_sidecar_prompt }
         Roast::Tools.setup_interrupt_handler(transcript)
         Roast::Tools.setup_exit_handler(self)
@@ -37,7 +43,7 @@ module Roast
       end
 
       def final_output
-        @final_output.join("\n")
+        @final_output.join("\n\n")
       end
 
       # Override chat_completion to add instrumentation
