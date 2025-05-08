@@ -1,0 +1,4 @@
+name: Workflow with Shell Target
+steps:
+  - step1
+target: test.rb

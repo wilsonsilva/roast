@@ -59,27 +59,6 @@ RSpec.describe(Roast::Workflow::Configuration) do
     end
   end
 
-  describe "#find_step_index" do
-    let(:steps) { ["step1", { "var1" => "step2" }, ["step3", "step4"]] }
-
-    it "finds index of simple string steps" do
-      expect(configuration.find_step_index(steps, "step1")).to(eq(0))
-    end
-
-    it "finds index of hash steps" do
-      expect(configuration.find_step_index(steps, "var1")).to(eq(1))
-    end
-
-    it "finds index within parallel steps" do
-      expect(configuration.find_step_index(steps, "step3")).to(eq(2))
-      expect(configuration.find_step_index(steps, "step4")).to(eq(2))
-    end
-
-    it "returns nil for non-existent steps" do
-      expect(configuration.find_step_index(steps, "nonexistent")).to(be_nil)
-    end
-  end
-
   describe "#function_config" do
     context "when functions are configured" do
       let(:workflow_path) { fixture_file("workflow_with_functions.yml") }

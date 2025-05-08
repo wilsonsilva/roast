@@ -23,7 +23,7 @@ steps:
 # set non-default attributes for steps below
 analyze_coverage:
   model: gpt-4.1-mini
-  loop: false
+  auto_loop: false
   json: true
   
 generate_grades:
@@ -32,7 +32,7 @@ generate_grades:
 
 generate_recommendations:
   model: o3
-  loop: false
+  auto_loop: false
   json: true
   params:
     max_completion_tokens: 5_000

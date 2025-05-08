@@ -20,6 +20,7 @@ module Roast
         @configuration = Configuration.new(workflow_path, options)
         @options = options
         @files = files
+        @replay_processed = false # Initialize replay tracking
         include_tools
         load_roast_initializers
         configure_api_client
@@ -72,14 +73,19 @@ module Roast
       private
 
       def setup_workflow(file, name:, context_path:)
+        session_name = configuration.name
+
         @current_workflow = BaseWorkflow.new(
           file,
           name: name,
           context_path: context_path,
           resource: configuration.resource,
+          session_name: session_name,
+          configuration: configuration,
         ).tap do |workflow|
           workflow.output_file = options[:output] if options[:output].present?
           workflow.verbose = options[:verbose] if options[:verbose].present?
+          workflow.concise = options[:concise] if options[:concise].present?
         end
       end
 
@@ -133,14 +139,65 @@ module Roast
         end
       end
 
+      def load_state_and_update_steps(steps, skip_until, step_name, timestamp)
+        state_repository = FileStateRepository.new
+
+        if timestamp
+          if state_repository.load_state_before_step(current_workflow, step_name, timestamp: timestamp)
+            $stderr.puts "Loaded saved state for step #{step_name} in session #{timestamp}"
+          else
+            $stderr.puts "Could not find saved state for step #{step_name} in session #{timestamp}, running from requested step"
+          end
+        elsif state_repository.load_state_before_step(current_workflow, step_name)
+          $stderr.puts "Loaded saved state for step #{step_name}"
+        else
+          $stderr.puts "Could not find saved state for step #{step_name}, running from requested step"
+        end
+
+        # Always return steps from the requested index, regardless of state loading success
+        steps[skip_until..-1]
+      end
+
       def parse(steps)
         return run(steps) if steps.is_a?(String)
+
+        # Handle replay option - skip to the specified step
+        if @options[:replay] && !@replay_processed
+          replay_param = @options[:replay]
+          timestamp = nil
+          step_name = replay_param
+
+          # Check if timestamp is prepended (format: timestamp:step_name)
+          if replay_param.include?(":")
+            timestamp, step_name = replay_param.split(":", 2)
+
+            # Validate timestamp format (YYYYMMDD_HHMMSS_LLL)
+            unless timestamp.match?(/^\d{8}_\d{6}_\d{3}$/)
+              raise ArgumentError, "Invalid timestamp format: #{timestamp}. Expected YYYYMMDD_HHMMSS_LLL"
+            end
+          end
+
+          # Find step index by iterating through the steps
+          skip_until = find_step_index_in_array(steps, step_name)
+
+          if skip_until
+            $stderr.puts "Replaying from step: #{step_name}#{timestamp ? " (session: #{timestamp})" : ""}"
+            current_workflow.session_timestamp = timestamp if timestamp
+            steps = load_state_and_update_steps(steps, skip_until, step_name, timestamp)
+          else
+            $stderr.puts "Step #{step_name} not found in workflow, running from beginning"
+          end
+          @replay_processed = true # Mark that we've processed replay, so we don't do it again in recursive calls
+        end
 
         # Use the WorkflowExecutor to execute the steps
         executor = WorkflowExecutor.new(current_workflow, configuration.config_hash, configuration.context_path)
         executor.execute_steps(steps)
 
         $stderr.puts "🔥🔥🔥 ROAST COMPLETE! 🔥🔥🔥"
+
+        # Save the final output to the session directory
+        save_final_output(current_workflow)
 
         # Save results to file if specified
         if current_workflow.output_file
@@ -155,6 +212,48 @@ module Roast
       def run(name)
         executor = WorkflowExecutor.new(current_workflow, configuration.config_hash, configuration.context_path)
         executor.execute_step(name)
+      end
+
+      def find_step_index_in_array(steps_array, step_name)
+        steps_array.each_with_index do |step, index|
+          case step
+          when Hash
+            # Could be {name: command} or {name: {substeps}}
+            step_key = step.keys.first
+            return index if step_key == step_name
+          when Array
+            # This is a parallel step container, search inside it
+            step.each_with_index do |substep, _substep_index|
+              case substep
+              when Hash
+                # Could be {name: command}
+                substep_key = substep.keys.first
+                return index if substep_key == step_name
+              when String
+                return index if substep == step_name
+              end
+            end
+          when String
+            return index if step == step_name
+          end
+        end
+        nil
+      end
+
+      def save_final_output(workflow)
+        return unless workflow.respond_to?(:session_name) && workflow.session_name && workflow.respond_to?(:final_output)
+
+        begin
+          final_output = workflow.final_output.to_s
+          return if final_output.empty?
+
+          state_repository = FileStateRepository.new
+          output_file = state_repository.save_final_output(workflow, final_output)
+          $stderr.puts "Final output saved to: #{output_file}" if output_file
+        rescue => e
+          # Don't fail if saving output fails
+          $stderr.puts "Warning: Failed to save final output to session: #{e.message}"
+        end
       end
     end
   end

@@ -45,8 +45,12 @@ module Roast
 
         $stderr.puts "Executing: #{name} (Resource type: #{resource_type || "unknown"})"
 
-        result = if name.starts_with?("%") || name.starts_with?("$(")
-          strip_and_execute(name)
+        result = if name.starts_with?("$(")
+          strip_and_execute(name).tap do |output|
+            # Add the command and output to the transcript for reference in following steps
+            workflow.transcript << { user: "I just executed the following command: ```\n#{name}\n```\n\nHere is the output:\n\n```\n#{output}\n```" }
+            workflow.transcript << { assistant: "Noted, thank you." }
+          end
         elsif name.include?("*") && (!workflow.respond_to?(:resource) || !workflow.resource)
           # Only use the glob method if we don't have a resource object yet
           # This is for backward compatibility
@@ -55,6 +59,10 @@ module Roast
           step_object = find_and_load_step(name)
           step_result = step_object.call
           workflow.output[name] = step_result
+
+          # Save state after each step if the workflow supports it
+          save_state(name, step_result) if workflow.respond_to?(:session_name) && workflow.session_name
+
           step_result
         end
 
@@ -106,6 +114,11 @@ module Roast
       end
 
       def find_and_load_step(step_name)
+        # First check for a prompt step
+        if step_name.strip.include?(" ")
+          return Roast::Workflow::PromptStep.new(workflow, name: step_name, auto_loop: false)
+        end
+
         # First check for a ruby file with the step name
         rb_file_path = File.join(context_path, "#{step_name}.rb")
         if File.file?(rb_file_path)
@@ -158,8 +171,38 @@ module Roast
       end
 
       def strip_and_execute(step)
-        command = step.gsub("%", "")
-        %x(#{command})
+        if step.match?(/^\$\((.*)\)$/)
+          command = step.strip.match(/^\$\((.*)\)$/)[1]
+          %x(#{command})
+        else
+          raise "Missing closing parentheses: #{step}"
+        end
+      end
+
+      def save_state(step_name, step_result)
+        state_repository = FileStateRepository.new
+
+        # Gather necessary data for state
+        static_data = workflow.respond_to?(:transcript) ? workflow.transcript.map(&:itself) : []
+
+        # Get output and final_output if available
+        output = workflow.respond_to?(:output) ? workflow.output.clone : {}
+        final_output = workflow.respond_to?(:final_output) ? workflow.final_output.clone : []
+
+        state_data = {
+          step_name: step_name,
+          order: output.keys.index(step_name) || output.size,
+          transcript: static_data,
+          output: output,
+          final_output: final_output,
+          execution_order: output.keys,
+        }
+
+        # Save the state
+        state_repository.save_state(workflow, step_name, state_data)
+      rescue => e
+        # Don't fail the workflow if state saving fails
+        $stderr.puts "Warning: Failed to save workflow state: #{e.message}"
       end
     end
   end
