@@ -17,7 +17,7 @@
       },
       "api_token": {
         "type": "string",
-        "description": "Shell command to fetch an API token dynamically, e.g. $(dev llm-gateway print-token --key)"
+        "description": "Shell command to fetch an API token dynamically, e.g. $(cat ~/.my-token)"
       },
       "model": {
         "type": "string",

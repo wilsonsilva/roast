@@ -30,28 +30,77 @@ module Roast
             File.expand_path(File.join(current_dir, "../../../../..")),
           ]
 
-          # Check if path already contains duplicate directories
+          # Check for directory name duplications anywhere in the path
           path_parts = expanded_path.split(File::SEPARATOR).reject(&:empty?)
-          duplicated_segments = path_parts.each_cons(2).select { |a, b| a == b }.map(&:first)
 
-          if duplicated_segments.any?
-            # Remove duplicated segments
-            unique_parts = []
-            path_parts.each_with_index do |part, i|
-              next if i > 0 && part == path_parts[i - 1] && duplicated_segments.include?(part)
+          # Try removing each duplicate segment individually and check if the resulting path exists
+          path_parts.each_with_index do |part, i|
+            next if i == 0 # Skip the first segment
 
-              unique_parts << part
+            # Check if this segment appears earlier in the path
+            next unless path_parts[0...i].include?(part)
+
+            # Create a new path without this segment
+            test_parts = path_parts.dup
+            test_parts.delete_at(i)
+
+            test_path = if original_path.start_with?("/")
+              File.join("/", *test_parts)
+            else
+              File.join(test_parts)
             end
 
-            # Join with leading slash if original path had one
-            result = if original_path.start_with?("/")
+            # If this path exists, return it
+            return test_path if File.exist?(test_path)
+
+            # Also try removing all future occurrences of this segment name
+            duplicate_indices = []
+            path_parts.each_with_index do |segment, idx|
+              if idx > 0 && segment == part && idx >= i
+                duplicate_indices << idx
+              end
+            end
+
+            next if duplicate_indices.none?
+
+            filtered_parts = path_parts.dup
+            # Remove from end to beginning to keep indices valid
+            duplicate_indices.reverse_each { |idx| filtered_parts.delete_at(idx) }
+
+            test_path = if original_path.start_with?("/")
+              File.join("/", *filtered_parts)
+            else
+              File.join(filtered_parts)
+            end
+
+            return test_path if File.exist?(test_path)
+          end
+
+          # Try detecting all duplicates at once
+          seen_segments = {}
+          duplicate_indices = []
+
+          path_parts.each_with_index do |part, i|
+            if seen_segments[part]
+              duplicate_indices << i
+            else
+              seen_segments[part] = true
+            end
+          end
+
+          if duplicate_indices.any?
+            # Try removing all duplicates
+            unique_parts = path_parts.dup
+            # Remove from end to beginning to keep indices valid
+            duplicate_indices.reverse_each { |i| unique_parts.delete_at(i) }
+
+            test_path = if original_path.start_with?("/")
               File.join("/", *unique_parts)
             else
               File.join(unique_parts)
             end
 
-            # Return the deduplicated path if the file exists
-            return result if File.exist?(result)
+            return test_path if File.exist?(test_path)
           end
 
           # Try relative path resolution from various possible roots
