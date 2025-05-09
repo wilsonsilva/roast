@@ -53,6 +53,17 @@ steps:
   - generate_final_report
 ```
 
+Workflows can include steps that run bash commands (wrap in `$()`) and even simple inlined prompts as a natural language string.
+
+```yaml
+steps:
+  - analyze_spec
+  - create_minitest
+  - run_and_improve
+  - $(bundle exec rubocop -A)
+  - Summarize the changes made to the codebase.
+```
+
 ## How to use Roast
 
 1. Create a workflow YAML file defining your steps and tools
@@ -94,12 +105,13 @@ Roast supports several types of steps:
        - check_test_coverage
    ```
 
-3. **Command execution step**: Executes shell commands directly
+3. **Command execution step**: Executes shell commands directly, just wrap in `$(expr)`
    ```yaml
    steps:
+     - $(command line expr)
      - rubocop: $(bundle exec rubocop -A)
    ```
-   This will execute the command and store the result in the workflow output hash under the key name (`rubocop` in this example).
+   This will execute the command and store the result in the workflow output hash. Explicit key name is optional (`rubocop` in the second line of the example).
 
 4. **Raw prompt step**: Simple text prompts for the model without tools
    ```yaml
