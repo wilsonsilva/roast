@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Core workflow execution engine for structured AI interactions
 - Step-based workflow definition system
 - Instrumentation hooks for monitoring and debugging
-- Integration with various LLM providers (via Raix)
+- Integration with various LLM providers (via [Raix](https://github.com/OlympiaAI/raix))
 - Schema validation for workflow inputs and outputs
 - Command-line interface for running workflows
 - Comprehensive documentation and examples
