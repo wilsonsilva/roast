@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/39589441-d15a-452b-b51c-3bf28f470308)
+![roast-horiz-logo](https://github.com/user-attachments/assets/f9b1ace2-5478-4f4a-ac8e-5945ed75c5b4)
 
 # Roast
 
