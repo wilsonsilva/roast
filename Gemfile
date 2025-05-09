@@ -13,7 +13,6 @@ gem "guard"
 gem "mocha"
 gem "pry"
 gem "rake", require: false
-gem "rspec", require: false
 gem "rubocop-shopify", require: false
 gem "vcr", require: false
 gem "webmock", require: false

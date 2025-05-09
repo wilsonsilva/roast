@@ -7,7 +7,10 @@ In this first step, try to understand the purpose and dependencies of the spec w
    - Dependencies and fixtures used
    - Mocks, stubs, and doubles
 
-2. Search for the SUT implementation and review dependent files to understand context.
+2. Use your tools to search for the SUT implementation and any other important dependent files so that they will be in the context for future steps in this process.
+   - Dependencies include fixtures
+   - Note that test/fixtures already has quite a bit of fixture files present
+   - If any fixtures are missing, copy them over when you write the new test file later
 
 3. Identify RSpec-specific features being used, such as:
    - describe/context blocks
@@ -22,6 +25,6 @@ In this first step, try to understand the purpose and dependencies of the spec w
    - Main subject under test
    - Key dependencies
    - Testing patterns used
-   - Challenging aspects for Minitest conversion
+   - Any potentially challenging aspects for Minitest conversion
 
 This analysis will guide the next steps of creating an equivalent Minitest implementation. 

@@ -1,88 +1,90 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "json"
-require_relative "../../lib/roast/resources"
+require "test_helper"
 
-class RoastResourcesTest < Minitest::Test
-  # .for tests
-  def test_for_creates_file_resource_for_file_paths
-    file_path = __FILE__
-    resource = Roast::Resources.for(file_path)
-    assert_kind_of(Roast::Resources::FileResource, resource)
-  end
+module Roast
+  class ResourcesTest < ActiveSupport::TestCase
+    class ForTest < ActiveSupport::TestCase
+      test "creates a FileResource for file paths" do
+        file_path = __FILE__
+        resource = Resources.for(file_path)
+        assert_instance_of(Resources::FileResource, resource)
+      end
 
-  def test_for_creates_directory_resource_for_directory_paths
-    dir_path = File.dirname(__FILE__)
-    resource = Roast::Resources.for(dir_path)
-    assert_kind_of(Roast::Resources::DirectoryResource, resource)
-  end
+      test "creates a DirectoryResource for directory paths" do
+        dir_path = File.dirname(__FILE__)
+        resource = Resources.for(dir_path)
+        assert_instance_of(Resources::DirectoryResource, resource)
+      end
 
-  def test_for_creates_url_resource_for_urls
-    url = "https://example.com/api"
-    resource = Roast::Resources.for(url)
-    assert_kind_of(Roast::Resources::UrlResource, resource)
-  end
+      test "creates a UrlResource for URLs" do
+        url = "https://example.com/api"
+        resource = Resources.for(url)
+        assert_instance_of(Resources::UrlResource, resource)
+      end
 
-  def test_for_creates_api_resource_for_fetch_api_style_configurations
-    config = {
-      url: "https://api.example.com/resource",
-      options: {
-        method: "GET",
-        headers: {
-          "Authorization": "Bearer token",
-        },
-      },
-    }.to_json
-    resource = Roast::Resources.for(config)
-    assert_kind_of(Roast::Resources::ApiResource, resource)
-  end
+      test "creates an ApiResource for Fetch API style configurations" do
+        config = {
+          url: "https://api.example.com/resource",
+          options: {
+            method: "GET",
+            headers: {
+              "Authorization": "Bearer token",
+            },
+          },
+        }.to_json
+        resource = Resources.for(config)
+        assert_instance_of(Resources::ApiResource, resource)
+      end
 
-  def test_for_creates_none_resource_for_nil_target
-    resource = Roast::Resources.for(nil)
-    assert_kind_of(Roast::Resources::NoneResource, resource)
-  end
+      test "creates a NoneResource for nil target" do
+        resource = Resources.for(nil)
+        assert_instance_of(Resources::NoneResource, resource)
+      end
 
-  def test_for_creates_none_resource_for_empty_target
-    resource = Roast::Resources.for("")
-    assert_kind_of(Roast::Resources::NoneResource, resource)
-  end
+      test "creates a NoneResource for empty target" do
+        resource = Resources.for("")
+        assert_instance_of(Resources::NoneResource, resource)
+      end
+    end
 
-  # .detect_type tests
-  def test_detect_type_returns_file_for_existing_files
-    assert_equal(:file, Roast::Resources.detect_type(__FILE__))
-  end
+    class DetectTypeTest < ActiveSupport::TestCase
+      test "returns :file for existing files" do
+        assert_equal(:file, Resources.detect_type(__FILE__))
+      end
 
-  def test_detect_type_returns_directory_for_existing_directories
-    assert_equal(:directory, Roast::Resources.detect_type(File.dirname(__FILE__)))
-  end
+      test "returns :directory for existing directories" do
+        assert_equal(:directory, Resources.detect_type(File.dirname(__FILE__)))
+      end
 
-  def test_detect_type_returns_url_for_urls_with_http_https_scheme
-    assert_equal(:url, Roast::Resources.detect_type("https://example.com"))
-    assert_equal(:url, Roast::Resources.detect_type("http://example.com"))
-    assert_equal(:url, Roast::Resources.detect_type("ftp://example.com"))
-  end
+      test "returns :url for URLs with http/https scheme" do
+        assert_equal(:url, Resources.detect_type("https://example.com"))
+        assert_equal(:url, Resources.detect_type("http://example.com"))
+        assert_equal(:url, Resources.detect_type("ftp://example.com"))
+      end
 
-  def test_detect_type_returns_api_for_fetch_api_style_json_configurations
-    config = {
-      url: "https://api.example.com/resource",
-      options: {
-        method: "GET",
-      },
-    }.to_json
-    assert_equal(:api, Roast::Resources.detect_type(config))
-  end
+      test "returns :api for Fetch API style JSON configurations" do
+        config = {
+          url: "https://api.example.com/resource",
+          options: {
+            method: "GET",
+          },
+        }.to_json
+        assert_equal(:api, Resources.detect_type(config))
+      end
 
-  def test_detect_type_returns_none_for_nil_target
-    assert_equal(:none, Roast::Resources.detect_type(nil))
-  end
+      test "returns :none for nil target" do
+        assert_equal(:none, Resources.detect_type(nil))
+      end
 
-  def test_detect_type_returns_none_for_empty_target
-    assert_equal(:none, Roast::Resources.detect_type(""))
-    assert_equal(:none, Roast::Resources.detect_type("  "))
-  end
+      test "returns :none for empty target" do
+        assert_equal(:none, Resources.detect_type(""))
+        assert_equal(:none, Resources.detect_type("  "))
+      end
 
-  def test_detect_type_returns_file_for_file_like_targets_that_do_not_exist_yet
-    assert_equal(:file, Roast::Resources.detect_type("/nonexistent/file.txt"))
+      test "returns :file for file-like targets that don't exist yet" do
+        assert_equal(:file, Resources.detect_type("/nonexistent/file.txt"))
+      end
+    end
   end
 end

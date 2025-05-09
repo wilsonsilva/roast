@@ -20,6 +20,10 @@ module FixtureHelpers
   def fixture_step(path)
     File.join(fixture_steps_dir, path)
   end
+
+  def fixture_file_path(filename)
+    File.expand_path(File.join(fixtures_dir, filename))
+  end
 end
 
 Minitest::Test.include(FixtureHelpers)

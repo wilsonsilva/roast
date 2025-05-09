@@ -11,12 +11,12 @@ In this step, you'll create a new Minitest file that replicates the functionalit
    - Replace `let`/`let!` declarations with instance variables or helper methods
    - Convert `expect(...).to` assertions to Minitest assertions
    - Replace RSpec matchers with equivalent Minitest assertions
-   - Handle mocks and stubs using Minitest's mocking capabilities
+   - Handle mocks and stubs using Minitest's mocking capabilities and Mocha
 
 2. Follow Minitest conventions:
    - Name the file with `_test.rb` suffix instead of `_spec.rb`
-   - Create a class that inherits from `Minitest::Test`
-   - Use snake_case for test method names prefixed with `test_`
+   - Create a class that inherits from `ActiveSupport::TestCase`
+   - Use that class's `test "description of the test` method to declare tests kind of like RSpec does
    - Use Minitest's assertion methods (`assert`, `assert_equal`, etc.)
    - Implement proper setup and teardown methods as needed
 
@@ -28,4 +28,6 @@ In this step, you'll create a new Minitest file that replicates the functionalit
 
 4. Write the complete Minitest file and save it to the appropriate location, replacing `_spec.rb` with `_test.rb` in the filename.
 
-Your converted Minitest file should maintain the same test coverage and intent as the original RSpec test while following Minitest's conventions and patterns. 
+Your converted Minitest file should maintain at least the same test coverage and intent as the original RSpec test while following Minitest's conventions and patterns.
+
+IMPORTANT: If you see opportunities to improve the test coverage in the newly written tests, you have my permission to do so. However, note that we should focus on testing behavior, not implementation. Do not test private methods, and never use Ruby tricks to make private methods public. Try to avoid mocking or stubbing anything on the SUT class.

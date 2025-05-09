@@ -185,7 +185,6 @@ DEPENDENCIES
   pry
   rake
   roast-ai!
-  rspec
   rubocop-shopify
   vcr
   webmock

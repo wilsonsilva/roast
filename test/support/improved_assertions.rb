@@ -26,6 +26,10 @@ module Minitest
 
       assert(result, msg)
     end
+
+    # NOTE: assert_received is removed since we're using Mocha's built-in verification
+    # With Mocha, verification happens automatically, and the test will fail if
+    # an expected method isn't called
   end
 end
 

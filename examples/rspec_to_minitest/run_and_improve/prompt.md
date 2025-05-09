@@ -32,4 +32,4 @@ In this final step, you'll use the `cmd` and `coding_agent` tool functions to ru
    - Any remaining considerations or edge cases
    - Confirmation of test coverage compared to original RSpec tests
 
-Your goal is to ensure the Minitest version provides the same test coverage and reliability as the original RSpec tests, while following Minitest best practices and conventions.
+Again, your goal is to ensure the Minitest version provides at least the same test coverage and reliability as the original RSpec tests, while following Minitest best practices and conventions.
