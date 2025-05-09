@@ -16,7 +16,6 @@ class FormatResult < Roast::Workflow::BaseStep
     append_to_final_output(<<~OUTPUT)
       ========== TEST GRADE REPORT ==========
       Test file: #{workflow.file}
-      Source file: #{workflow.subject_file}
     OUTPUT
 
     format_results

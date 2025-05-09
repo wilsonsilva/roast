@@ -20,7 +20,7 @@ class RunCoverage < Roast::Workflow::BaseStep
     extension = "js" if ["js", "jsx", "ts", "tsx"].include?(extension)
 
     # Get the absolute path to the test_runner executable
-    test_runner_path = File.expand_path("../../bin/#{extension}_test_runner", __dir__)
+    test_runner_path = File.expand_path("#{extension}_test_runner", __dir__)
 
     # Make sure the test_runner executable exists
     unless File.exist?(test_runner_path)
@@ -33,7 +33,7 @@ class RunCoverage < Roast::Workflow::BaseStep
     resolved_test_file = Roast::Helpers::PathResolver.resolve(test_file)
 
     # Run the test_runner using shadowenv for environment consistency
-    command = "shadowenv exec --dir . -- #{test_runner_path} #{resolved_subject_file} #{resolved_test_file}"
+    command = "shadowenv exec --dir . -- #{test_runner_path} #{resolved_test_file} #{resolved_subject_file}"
     output, status = Open3.capture2(command)
 
     unless status.success?
