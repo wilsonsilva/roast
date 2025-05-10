@@ -220,4 +220,39 @@ class RoastWorkflowConfigurationParserTest < ActiveSupport::TestCase
     output = capture_stderr { @parser.send(:parse, steps) }
     assert_match(/Step nonexistent_step not found/, output)
   end
+
+  def test_restore_workflow_state_properly_restores_workflow_properties
+    # Create a simplified workflow class for testing
+    test_workflow = Class.new(Object) do
+      attr_accessor :output, :transcript, :final_output
+
+      def initialize
+        @output = {}
+        @transcript = []
+        @final_output = []
+      end
+
+      def instance_variable_defined?(name)
+        true
+      end
+    end.new
+
+    # Set up state data to restore
+    state_data = {
+      output: { "step1" => "result1", "step2" => "result2" },
+      transcript: [{ "user" => "test message" }, { "assistant" => "test response" }],
+      final_output: ["output line 1", "output line 2"],
+    }
+
+    # Set up parser with the test workflow
+    @parser.stubs(:current_workflow).returns(test_workflow)
+
+    # Call the method being tested
+    @parser.send(:restore_workflow_state, state_data)
+
+    # Verify the behavior by checking the end state
+    assert_equal(state_data[:output], test_workflow.output)
+    assert_equal(state_data[:transcript], test_workflow.transcript)
+    assert_equal(state_data[:final_output], test_workflow.final_output)
+  end
 end

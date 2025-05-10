@@ -141,21 +141,68 @@ module Roast
 
       def load_state_and_update_steps(steps, skip_until, step_name, timestamp)
         state_repository = FileStateRepository.new
+        state_data = nil
 
         if timestamp
-          if state_repository.load_state_before_step(current_workflow, step_name, timestamp: timestamp)
-            $stderr.puts "Loaded saved state for step #{step_name} in session #{timestamp}"
+          $stderr.puts "Looking for state before '#{step_name}' in session #{timestamp}..."
+          state_data = state_repository.load_state_before_step(current_workflow, step_name, timestamp: timestamp)
+          if state_data
+            $stderr.puts "Successfully loaded state with data from previous step"
+            restore_workflow_state(state_data)
           else
-            $stderr.puts "Could not find saved state for step #{step_name} in session #{timestamp}, running from requested step"
+            $stderr.puts "Could not find suitable state data from a previous step to '#{step_name}' in session #{timestamp}."
+            $stderr.puts "Will run workflow from '#{step_name}' without prior context."
           end
-        elsif state_repository.load_state_before_step(current_workflow, step_name)
-          $stderr.puts "Loaded saved state for step #{step_name}"
         else
-          $stderr.puts "Could not find saved state for step #{step_name}, running from requested step"
+          $stderr.puts "Looking for state before '#{step_name}' in most recent session..."
+          state_data = state_repository.load_state_before_step(current_workflow, step_name)
+          if state_data
+            $stderr.puts "Successfully loaded state with data from previous step"
+            restore_workflow_state(state_data)
+          else
+            $stderr.puts "Could not find suitable state data from a previous step to '#{step_name}'."
+            $stderr.puts "Will run workflow from '#{step_name}' without prior context."
+          end
         end
 
         # Always return steps from the requested index, regardless of state loading success
         steps[skip_until..-1]
+      end
+
+      # Restore workflow state from loaded state data
+      def restore_workflow_state(state_data)
+        return unless state_data && current_workflow
+
+        # Restore output
+        if state_data[:output] && current_workflow.respond_to?(:output=)
+          # Use the setter which will ensure it's a HashWithIndifferentAccess
+          current_workflow.output = state_data[:output]
+        end
+
+        # Restore transcript if available
+        if state_data[:transcript] && current_workflow.respond_to?(:transcript=)
+          current_workflow.transcript = state_data[:transcript]
+        elsif state_data[:transcript] && current_workflow.respond_to?(:transcript) &&
+            current_workflow.transcript.respond_to?(:clear) &&
+            current_workflow.transcript.respond_to?(:<<)
+          current_workflow.transcript.clear
+          state_data[:transcript].each do |message|
+            current_workflow.transcript << message
+          end
+        end
+
+        # Restore final output if available
+        if state_data[:final_output]
+          # Make sure final_output is always handled as an array
+          final_output = state_data[:final_output]
+          final_output = [final_output] if final_output.is_a?(String)
+
+          if current_workflow.respond_to?(:final_output=)
+            current_workflow.final_output = final_output
+          elsif current_workflow.instance_variable_defined?(:@final_output)
+            current_workflow.instance_variable_set(:@final_output, final_output)
+          end
+        end
       end
 
       def parse(steps)

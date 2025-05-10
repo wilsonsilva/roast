@@ -5,19 +5,20 @@ require "raix/function_dispatch"
 require "active_support"
 require "active_support/isolated_execution_state"
 require "active_support/notifications"
+require "active_support/core_ext/hash/indifferent_access"
 
 module Roast
   module Workflow
     class BaseWorkflow
       include Raix::ChatCompletion
 
+      attr_reader :output
       attr_accessor :file,
         :concise,
         :output_file,
         :verbose,
         :name,
         :context_path,
-        :output,
         :resource,
         :session_name,
         :session_timestamp,
@@ -28,7 +29,7 @@ module Roast
         @name = name || self.class.name.underscore.split("/").last
         @context_path = context_path || determine_context_path
         @final_output = []
-        @output = {}
+        @output = ActiveSupport::HashWithIndifferentAccess.new
         @resource = resource || Roast::Resources.for(file)
         @session_name = session_name || @name
         @session_timestamp = nil
@@ -38,12 +39,30 @@ module Roast
         Roast::Tools.setup_exit_handler(self)
       end
 
+      # Custom writer for output to ensure it's always a HashWithIndifferentAccess
+      def output=(value)
+        @output = if value.is_a?(ActiveSupport::HashWithIndifferentAccess)
+          value
+        else
+          ActiveSupport::HashWithIndifferentAccess.new(value)
+        end
+      end
+
       def append_to_final_output(message)
         @final_output << message
       end
 
       def final_output
-        @final_output.join("\n\n")
+        return @final_output if @final_output.is_a?(String)
+        return "" if @final_output.nil?
+
+        # Handle array case (expected normal case)
+        if @final_output.respond_to?(:join)
+          @final_output.join("\n\n")
+        else
+          # Handle any other unexpected type by converting to string
+          @final_output.to_s
+        end
       end
 
       # Override chat_completion to add instrumentation
