@@ -15,7 +15,7 @@ Roast provides a structured, declarative approach to building AI workflows with:
 - **Step customization**: Steps can be fully configured with their own AI models and parameters.
 - **Session replay**: Rerun previous sessions starting at a specified step to speed up development time
 - **Parallel execution**: Run multiple steps concurrently to speed up workflow execution
-- **Function caching:**: Flexibly cache the results of tool function calls to speed up workflows
+- **Function caching**: Flexibly cache the results of tool function calls to speed up workflows
 - **Extensive instrumentation**: Monitor and track workflow execution, AI calls, and tool usage ([see instrumentation documentation](docs/INSTRUMENTATION.md))
 
 ## What does it look like?
