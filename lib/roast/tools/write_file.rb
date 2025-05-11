@@ -21,7 +21,9 @@ module Roast
               },
               content: { type: "string", description: "The content to write to the file" },
             ) do |params|
-              Roast::Tools::WriteFile.call(params[:path], params[:content]).tap do |_result|
+              restrict_path = params[:params]&.dig("restrict")
+
+              Roast::Tools::WriteFile.call(params[:path], params[:content], restrict_path).tap do |_result|
                 Roast::Helpers::Logger.info(params[:content])
               end
             end
@@ -29,9 +31,8 @@ module Roast
         end
       end
 
-      def call(path, content)
-        if path.start_with?("test/")
-
+      def call(path, content, restrict_path = nil)
+        if restrict_path.nil? || restrict_path.empty? || path.start_with?(restrict_path)
           Roast::Helpers::Logger.info("📝 Writing to file: #{path}\n")
 
           # Ensure the directory exists
@@ -46,8 +47,9 @@ module Roast
 
           "Successfully wrote #{content.lines.count} lines to #{path}"
         else
-          Roast::Helpers::Logger.error("😳 Path must start with 'test/' to use the write_file tool\n")
-          "Error: Path must start with 'test/' to use the write_file tool, try again."
+          restriction_message = "😳 Path must start with '#{restrict_path}' to use the write_file tool\n"
+          Roast::Helpers::Logger.error(restriction_message)
+          "Error: Path must start with '#{restrict_path}' to use the write_file tool, try again."
         end
       rescue StandardError => e
         "Error writing file: #{e.message}".tap do |error_message|

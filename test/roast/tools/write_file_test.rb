@@ -47,9 +47,36 @@ class RoastToolsWriteFileTest < ActiveSupport::TestCase
     assert_equal new_content, File.read(@test_file_path)
   end
 
-  test ".call returns error for invalid path" do
-    result = Roast::Tools::WriteFile.call("invalid/path.txt", "content")
-    assert_equal "Error: Path must start with 'test/' to use the write_file tool, try again.", result
+  test ".call allows any path by default" do
+    any_path = File.join(@temp_dir, "any", "path.txt").sub("#{Dir.pwd}/", "")
+    result = Roast::Tools::WriteFile.call(any_path, "content")
+    assert_match(/Successfully wrote/, result)
+  end
+
+  test ".call with custom path restriction succeeds for valid paths" do
+    src_path = File.join(@temp_dir, "src", "file.txt").sub("#{Dir.pwd}/", "")
+    FileUtils.mkdir_p(File.join(@temp_dir, "src"))
+    result = Roast::Tools::WriteFile.call(src_path, "content", "#{File.join(@temp_dir, "src").sub("#{Dir.pwd}/", "")}/")
+    assert_match(/Successfully wrote/, result)
+  end
+
+  test ".call with custom path restriction fails for invalid paths" do
+    app_path = File.join(@temp_dir, "app", "file.txt").sub("#{Dir.pwd}/", "")
+    src_restriction = File.join(@temp_dir, "src").sub("#{Dir.pwd}/", "") + "/"
+    result = Roast::Tools::WriteFile.call(app_path, "content", src_restriction)
+    assert_equal "Error: Path must start with '#{src_restriction}' to use the write_file tool, try again.", result
+  end
+
+  test ".call with no path restriction" do
+    any_path = File.join(@temp_dir, "any", "path", "file.txt").sub("#{Dir.pwd}/", "")
+    result = Roast::Tools::WriteFile.call(any_path, "content", nil)
+    assert_match(/Successfully wrote/, result)
+  end
+
+  test ".call with empty path restriction" do
+    any_path = File.join(@temp_dir, "any", "path", "file.txt").sub("#{Dir.pwd}/", "")
+    result = Roast::Tools::WriteFile.call(any_path, "content", "")
+    assert_match(/Successfully wrote/, result)
   end
 
   test ".call handles permission errors" do
