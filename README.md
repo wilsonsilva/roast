@@ -423,13 +423,13 @@ your-project/
 ## Installation
 
 ```bash
-$ gem install roast
+$ gem install roast-ai
 ```
 
 Or add to your Gemfile:
 
 ```ruby
-gem 'roast'
+gem 'roast-ai'
 ```
 
 ## Development
