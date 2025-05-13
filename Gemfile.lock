@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    roast-ai (0.1.3)
+    roast-ai (0.1.4)
       activesupport (~> 8.0)
       faraday-retry
       json-schema
