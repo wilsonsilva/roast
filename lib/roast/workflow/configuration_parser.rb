@@ -6,6 +6,7 @@ require_relative "../helpers/function_caching_interceptor"
 require "active_support"
 require "active_support/isolated_execution_state"
 require "active_support/notifications"
+require "raix"
 
 module Roast
   module Workflow
@@ -117,16 +118,16 @@ module Roast
         return unless configuration.api_token
 
         begin
-          require "raix"
+          case configuration.api_provider
+          when :openrouter
+            $stderr.puts "Configuring OpenRouter client with token from workflow"
+            require "open_router"
 
-          # Configure OpenAI client with the token
-          $stderr.puts "Configuring API client with token from workflow"
-
-          # Initialize the OpenAI client if it doesn't exist
-          if defined?(Raix.configuration.openai_client)
-            # Create a new client with the token
-            Raix.configuration.openai_client = OpenAI::Client.new(access_token: configuration.api_token)
+            Raix.configure do |config|
+              config.openrouter_client = OpenRouter::Client.new(api_key: configuration.api_token)
+            end
           else
+            $stderr.puts "Configuring OpenAI client with token from workflow"
             require "openai"
 
             Raix.configure do |config|

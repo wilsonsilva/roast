@@ -8,7 +8,7 @@ module Roast
     # Encapsulates workflow configuration data and provides structured access
     # to the configuration settings
     class Configuration
-      attr_reader :config_hash, :workflow_path, :name, :steps, :tools, :function_configs, :api_token, :model, :resource
+      attr_reader :config_hash, :workflow_path, :name, :steps, :tools, :function_configs, :api_token, :api_provider, :model, :resource
       attr_accessor :target
 
       def initialize(workflow_path, options = {})
@@ -44,6 +44,9 @@ module Roast
         if @config_hash["api_token"]
           @api_token = process_shell_command(@config_hash["api_token"])
         end
+
+        # Determine API provider (defaults to OpenAI if not specified)
+        @api_provider = determine_api_provider
 
         # Extract default model if provided
         @model = @config_hash["model"]
@@ -138,7 +141,31 @@ module Roast
         @function_configs[function_name.to_s] || {}
       end
 
+      def openrouter?
+        @api_provider == :openrouter
+      end
+
+      def openai?
+        @api_provider == :openai
+      end
+
       private
+
+      def determine_api_provider
+        return :openai unless @config_hash["api_provider"]
+
+        provider = @config_hash["api_provider"].to_s.downcase
+
+        case provider
+        when "openai"
+          :openai
+        when "openrouter"
+          :openrouter
+        else
+          Roast::Helpers::Logger.warn("Unknown API provider '#{provider}', defaulting to OpenAI")
+          :openai
+        end
+      end
 
       def process_shell_command(command)
         # If it's a bash command with the $(command) syntax

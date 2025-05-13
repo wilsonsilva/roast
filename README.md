@@ -298,8 +298,26 @@ Individual steps can override this setting with their own model parameter:
 
 ```yaml
 analyze_data:
-  model: anthropic:claude-3-haiku  # Takes precedence over the global model
+  model: anthropic/claude-3-haiku  # Takes precedence over the global model
 ```
+
+#### API Provider Configuration
+
+Roast supports both OpenAI and OpenRouter as API providers. By default, Roast uses OpenAI, but you can specify OpenRouter:
+
+```yaml
+name: My Workflow
+api_provider: openrouter
+api_token: $(echo $OPENROUTER_API_KEY)
+model: anthropic/claude-3-opus-20240229
+```
+
+Benefits of using OpenRouter:
+- Access to multiple model providers through a single API
+- Support for models from Anthropic, Meta, Mistral, and more
+- Consistent API interface across different model providers
+
+When using OpenRouter, specify fully qualified model names including the provider prefix (e.g., `anthropic/claude-3-opus-20240229`).
 
 #### Dynamic API Tokens
 
@@ -309,8 +327,12 @@ Roast allows you to dynamically fetch API tokens using shell commands directly i
 # This will execute the shell command and use the result as the API token
 api_token: $(print-token --key)
 
-# Or a simpler example for demonstration:
+# For OpenAI (default)
 api_token: $(echo $OPENAI_API_KEY)
+
+# For OpenRouter (requires api_provider setting)
+api_provider: openrouter
+api_token: $(echo $OPENROUTER_API_KEY)
 ```
 
 This makes it easy to use environment-specific tokens without hardcoding credentials, especially useful in development environments or CI/CD pipelines.
