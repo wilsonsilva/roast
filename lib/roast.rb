@@ -7,6 +7,7 @@ require "roast/tools"
 require "roast/helpers"
 require "roast/resources"
 require "roast/workflow"
+require "roast/initializers"
 
 module Roast
   ROOT = File.expand_path("../..", __FILE__)
