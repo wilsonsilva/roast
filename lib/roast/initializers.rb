@@ -9,14 +9,13 @@ module Roast
 
       def load_all
         project_initializers = Roast::Initializers.initializers_path
+        return unless Dir.exist?(project_initializers)
 
-        if Dir.exist?(project_initializers)
-          $stderr.puts "Loading project initializers from #{project_initializers}"
-          pattern = File.join(project_initializers, "**/*.rb")
-          Dir.glob(pattern).sort.each do |file|
-            $stderr.puts "Loading initializer: #{file}"
-            require file
-          end
+        $stderr.puts "Loading project initializers from #{project_initializers}"
+        pattern = File.join(project_initializers, "**/*.rb")
+        Dir.glob(pattern).sort.each do |file|
+          $stderr.puts "Loading initializer: #{file}"
+          require file
         end
       rescue => e
         Roast::Helpers::Logger.error("Error loading initializers: #{e.message}")
