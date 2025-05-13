@@ -32,11 +32,12 @@ module Roast
       end
 
       def call(path)
+        path = File.expand_path(path)
         Roast::Helpers::Logger.info("📖 Reading file: #{path}\n")
         if File.directory?(path)
           %x(ls -la #{path})
         else
-          File.read(File.join(Dir.pwd, path))
+          File.read(path)
         end
       rescue StandardError => e
         "Error reading file: #{e.message}".tap do |error_message|

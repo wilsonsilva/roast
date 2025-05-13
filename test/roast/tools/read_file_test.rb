@@ -38,6 +38,24 @@ class RoastToolsReadFileTest < ActiveSupport::TestCase
     assert_match(/Error reading file: No such file or directory/, result)
   end
 
+  test ".call handles both relative and absolute paths" do
+    # Create a test file
+    test_file = "test_relative_path.txt"
+    File.write(test_file, "relative path content")
+
+    # Test with relative path
+    relative_result = Roast::Tools::ReadFile.call(test_file)
+    assert_equal "relative path content", relative_result
+
+    # Test with absolute path
+    absolute_path = File.expand_path(test_file)
+    absolute_result = Roast::Tools::ReadFile.call(absolute_path)
+    assert_equal "relative path content", absolute_result
+
+    # Clean up
+    File.unlink(test_file)
+  end
+
   class DummyBaseClass
     class << self
       attr_reader :function_called, :function_name, :function_description, :function_params, :function_block
