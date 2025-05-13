@@ -13,7 +13,7 @@ module Roast
 
         $stderr.puts "Loading project initializers from #{project_initializers}"
         pattern = File.join(project_initializers, "**/*.rb")
-        Dir.glob(pattern).sort.each do |file|
+        Dir.glob(pattern, sort: true).each do |file|
           $stderr.puts "Loading initializer: #{file}"
           require file
         end

@@ -73,5 +73,24 @@ module Roast
         assert_equal(expected_output, err)
       end
     end
+
+    def test_with_multiple_initializer_files
+      initializer_path = path_for_initializers("multiple")
+
+      Roast::Initializers.stub(:initializers_path, initializer_path) do
+        out, err = capture_io do
+          Roast::Initializers.load_all
+        end
+
+        assert_equal("", out)
+        expected_output = <<~OUTPUT
+          Loading project initializers from #{initializer_path}
+          Loading initializer: #{File.join(initializer_path, "first.rb")}
+          Loading initializer: #{File.join(initializer_path, "second.rb")}
+          Loading initializer: #{File.join(initializer_path, "third.rb")}
+        OUTPUT
+        assert_equal(expected_output, err)
+      end
+    end
   end
 end
