@@ -3,8 +3,20 @@
 module Roast
   class Initializers
     class << self
+      def config_root(starting_path = Dir.pwd, ending_path = File.dirname(Dir.home))
+        paths = []
+        candidate = starting_path
+        while candidate != ending_path
+          paths << File.join(candidate, ".roast")
+          candidate = File.dirname(candidate)
+        end
+
+        first_existing = paths.find { |path| Dir.exist?(path) }
+        first_existing || paths.first
+      end
+
       def initializers_path
-        File.join(Dir.pwd, ".roast", "initializers")
+        File.join(Roast::Initializers.config_root, "initializers")
       end
 
       def load_all
