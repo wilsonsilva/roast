@@ -33,6 +33,25 @@ module Roast
         end
       end
 
+      # Interpolates {{expression}} in a string with values from the workflow context
+      def interpolate(text)
+        return text unless text.is_a?(String) && text.include?("{{") && text.include?("}}")
+
+        # Replace all {{expression}} with their evaluated values
+        text.gsub(/\{\{([^}]+)\}\}/) do |match|
+          expression = Regexp.last_match(1).strip
+          begin
+            # Evaluate the expression in the workflow's context
+            workflow.instance_eval(expression).to_s
+          rescue => e
+            # If evaluation fails, provide a more detailed error message but preserve the original expression
+            error_msg = "Error interpolating {{#{expression}}}: #{e.message}. This variable is not defined in the workflow context. Please define it before using it in a step name."
+            $stderr.puts "ERROR: #{error_msg}"
+            match # Return the original match to preserve it in the string
+          end
+        end
+      end
+
       def execute_step(name)
         start_time = Time.now
         # For tests, make sure that we handle this gracefully
@@ -95,10 +114,16 @@ module Roast
       def execute_hash_step(step)
         # execute a command and store the output in a variable
         name, command = step.to_a.flatten
+
+        # Interpolate variable name if it contains {{}}
+        interpolated_name = interpolate(name)
+
         if command.is_a?(Hash)
           execute_steps([command])
         else
-          workflow.output[name] = execute_step(command)
+          # Interpolate command value
+          interpolated_command = interpolate(command)
+          workflow.output[interpolated_name] = execute_step(interpolated_command)
         end
       end
 
@@ -110,7 +135,9 @@ module Roast
       end
 
       def execute_string_step(step)
-        execute_step(step)
+        # Interpolate any {{}} expressions before executing the step
+        interpolated_step = interpolate(step)
+        execute_step(interpolated_step)
       end
 
       def find_and_load_step(step_name)
@@ -172,7 +199,11 @@ module Roast
 
       def strip_and_execute(step)
         if step.match?(/^\$\((.*)\)$/)
+          # Extract the command from the $(command) syntax
           command = step.strip.match(/^\$\((.*)\)$/)[1]
+
+          # NOTE: We don't need to call interpolate here as it's already been done
+          # in execute_string_step before this method is called
           %x(#{command})
         else
           raise "Missing closing parentheses: #{step}"

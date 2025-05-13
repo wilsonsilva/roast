@@ -1,0 +1,23 @@
+name: interpolation_example
+model: anthropic:claude-3-7-sonnet
+
+tools:
+  - Roast::Tools::ReadFile
+  - Roast::Tools::WriteFile
+  - Roast::Tools::Grep
+
+steps:
+  - analyze_file
+  - extract_info: analyze_patterns
+  - generate_report_for_{{File.extname(workflow.file).sub('.', '')}}
+  - '$(echo "Processing completed for file: {{File.basename(workflow.file)}}")'
+
+analyze_patterns:
+  json: true
+
+generate_report_for_rb:
+  print_response: true
+
+generate_report_for_md:
+  print_response: true
+  

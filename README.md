@@ -53,15 +53,15 @@ steps:
   - generate_final_report
 ```
 
-Workflows can include steps that run bash commands (wrap in `$()`) and even simple inlined prompts as a natural language string.
+Workflows can include steps that run bash commands (wrap in `$()`), use interpolation with `{{}}` syntax, and even simple inlined prompts as a natural language string.
 
 ```yaml
 steps:
   - analyze_spec
   - create_minitest
   - run_and_improve
-  - $(bundle exec rubocop -A)
-  - Summarize the changes made to the codebase.
+  - $(bundle exec rubocop -A {{file}})
+  - Summarize the changes made to {{File.basename(file)}}.
 ```
 
 ## How to use Roast
@@ -122,7 +122,7 @@ Roast supports several types of steps:
 
 #### Data Flow Between Steps
 
-Roast handles data flow between steps in two primary ways:
+Roast handles data flow between steps in three primary ways:
 
 1. **Conversation Context (Implicit)**: The LLM naturally remembers the entire conversation history, including all previous prompts and responses. In most cases, this is all you need for a step to reference and build upon previous results. This is the preferred approach for most prompt-oriented workflows.
 
@@ -131,7 +131,21 @@ Roast handles data flow between steps in two primary ways:
    - You're writing custom output logic
    - You need to access specific values for presentation or logging
 
-For typical AI workflows, the continuous conversation history provides seamless data flow without requiring explicit access to the output hash. Steps can simply refer to previous information in their prompts, and the AI model will use its memory of the conversation to provide context-aware responses.
+3. **Interpolation (Dynamic)**: You can use `{{expression}}` syntax to inject values from the workflow context directly into step names, commands, or prompt text. For example:
+   ```yaml
+   steps:
+     - analyze_file
+     - $(rubocop -A {{file}})
+     - Generate a summary for {{file}}
+     - result_for_{{file}}: store_results
+   ```
+   
+   Interpolation supports:
+   - Simple variable access: `{{file}}`, `{{resource.target}}`
+   - Access to step outputs: `{{output['previous_step']}}`
+   - Any valid Ruby expression evaluated in the workflow context: `{{File.basename(file)}}`
+
+For typical AI workflows, the continuous conversation history provides seamless data flow without requiring explicit access to the output hash. Steps can simply refer to previous information in their prompts, and the AI model will use its memory of the conversation to provide context-aware responses. For more dynamic requirements, the interpolation syntax provides a convenient way to inject context-specific values into steps.
 
 ### Command Line Options
 

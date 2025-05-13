@@ -19,11 +19,39 @@ class RoastWorkflowWorkflowExecutorTest < ActiveSupport::TestCase
     @executor.execute_steps(["step1"])
   end
 
+  test "executes string steps with interpolation" do
+    @workflow.expects(:instance_eval).with("file").returns("test.rb")
+    @executor.expects(:execute_step).with("step test.rb")
+    @executor.execute_steps(["step {{file}}"])
+  end
+
   # Hash steps tests
   test "executes hash steps" do
     @executor.expects(:execute_step).with("command1").returns("result")
     @executor.execute_steps([{ "var1" => "command1" }])
     assert_equal "result", @output["var1"]
+  end
+
+  test "executes hash steps with interpolation in key" do
+    @workflow.expects(:instance_eval).with("var_name").returns("test_var")
+    @executor.expects(:execute_step).with("command1").returns("result")
+    @executor.execute_steps([{ "{{var_name}}" => "command1" }])
+    assert_equal "result", @output["test_var"]
+  end
+
+  test "executes hash steps with interpolation in value" do
+    @workflow.expects(:instance_eval).with("cmd").returns("test_command")
+    @executor.expects(:execute_step).with("test_command").returns("result")
+    @executor.execute_steps([{ "var1" => "{{cmd}}" }])
+    assert_equal "result", @output["var1"]
+  end
+
+  test "executes hash steps with interpolation in both key and value" do
+    @workflow.expects(:instance_eval).with("var_name").returns("test_var")
+    @workflow.expects(:instance_eval).with("cmd").returns("test_command")
+    @executor.expects(:execute_step).with("test_command").returns("result")
+    @executor.execute_steps([{ "{{var_name}}" => "{{cmd}}" }])
+    assert_equal "result", @output["test_var"]
   end
 
   # Array steps (parallel execution) tests
@@ -121,5 +149,48 @@ class RoastWorkflowWorkflowExecutorTest < ActiveSupport::TestCase
 
     result = @executor.execute_step("step1")
     assert_equal "result", result
+  end
+
+  # Interpolation tests
+  test "interpolates simple expressions in step names" do
+    @workflow.expects(:instance_eval).with("file").returns("test.rb")
+    result = @executor.interpolate("{{file}}")
+    assert_equal "test.rb", result
+  end
+
+  test "interpolates expressions with surrounding text" do
+    @workflow.expects(:instance_eval).with("file").returns("test.rb")
+    result = @executor.interpolate("Process {{file}} with rubocop")
+    assert_equal "Process test.rb with rubocop", result
+  end
+
+  test "interpolates expressions in shell commands" do
+    @workflow.expects(:instance_eval).with("file").returns("test.rb")
+    @executor.expects(:strip_and_execute).with("$(rubocop -A test.rb)").returns("Shell output")
+    @workflow.expects(:transcript).returns([]).at_least(1)
+
+    # First interpolate is called in execute_string_step (via execute_steps),
+    # then the command is passed to execute_step and the result is finally strip_and_execute
+    @executor.execute_steps(["$(rubocop -A {{file}})"])
+  end
+
+  test "leaves expressions unchanged when interpolation fails" do
+    @workflow.expects(:instance_eval).with("unknown_var").raises(NameError.new("undefined local variable"))
+    result = @executor.interpolate("Process {{unknown_var}}")
+    assert_equal "Process {{unknown_var}}", result
+  end
+
+  test "interpolates multiple expressions" do
+    @workflow.expects(:instance_eval).with("file").returns("test.rb")
+    @workflow.expects(:instance_eval).with("line").returns("42")
+    result = @executor.interpolate("{{file}}:{{line}}")
+    assert_equal "test.rb:42", result
+  end
+
+  test "interpolates output from previous steps" do
+    @output["previous_step"] = "previous result"
+    @workflow.expects(:instance_eval).with("output['previous_step']").returns("previous result")
+    result = @executor.interpolate("Using {{output['previous_step']}}")
+    assert_equal "Using previous result", result
   end
 end

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2024-05-13
+
+### Added
+- Interpolation feature for dynamic workflows using `{{}}` syntax
+- Support for injecting values from workflow context into step names and commands
+- Ability to access file metadata and step outputs using interpolation expressions
+- Examples demonstrating interpolation usage with different file types
+
+[0.1.5]: https://github.com/Shopify/roast/releases/tag/v0.1.5
+
 ## [0.1.4] - 2024-05-13
 
 ### Fixed

@@ -100,6 +100,10 @@ module Roast
         raise
       end
 
+      def workflow
+        self
+      end
+
       private
 
       # Determine the directory where the actual class is defined, not BaseWorkflow
