@@ -3,13 +3,17 @@
 module Roast
   class Initializers
     class << self
+      def initializers_path
+        File.join(Dir.pwd, ".roast", "initializers")
+      end
+
       def load_all
-        # Project-specific initializers
-        project_initializers = File.join(Dir.pwd, ".roast", "initializers")
+        project_initializers = Roast::Initializers.initializers_path
 
         if Dir.exist?(project_initializers)
           $stderr.puts "Loading project initializers from #{project_initializers}"
-          Dir.glob(File.join(project_initializers, "**/*.rb")).sort.each do |file|
+          pattern = File.join(project_initializers, "**/*.rb")
+          Dir.glob(pattern).sort.each do |file|
             $stderr.puts "Loading initializer: #{file}"
             require file
           end
