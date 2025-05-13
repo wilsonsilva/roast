@@ -2,7 +2,7 @@
 
 require "minitest/autorun"
 require "mocha/minitest"
-require "cgi/escape"
+require "cgi"
 require "vcr"
 
 require "active_support/test_case"
