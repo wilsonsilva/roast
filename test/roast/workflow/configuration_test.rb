@@ -125,6 +125,23 @@ module Roast
           assert_equal({}, configuration.function_config("nonexistent"))
         end
       end
+
+      class WriteFileConfigTest < ActiveSupport::TestCase
+        FIXTURES = File.expand_path("../../../test/fixtures", __dir__)
+
+        def setup
+          @options = {}
+          @workflow_path = File.join(FIXTURES, "workflow_with_write_file_config.yml")
+        end
+
+        def test_write_file_function_config
+          configuration = Roast::Workflow::Configuration.new(@workflow_path, @options)
+          write_file_config = configuration.function_config("write_file")
+
+          assert_equal(true, write_file_config["cached"])
+          assert_equal("src/", write_file_config["params"]["restrict"])
+        end
+      end
     end
   end
 end
