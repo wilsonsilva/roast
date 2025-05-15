@@ -10,8 +10,8 @@ gemspec
 gem "cgi"
 gem "dotenv"
 gem "guard"
+gem "guard-minitest"
 gem "mocha"
-gem "pry"
 gem "rake", require: false
 gem "rubocop-shopify", require: false
 gem "vcr", require: false
