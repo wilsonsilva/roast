@@ -13,10 +13,11 @@ module Roast
           base.class_eval do
             function(
               :search_for_file,
-              'Search for a file in the project using `find . -type f -path "*#{@file_name}*"` in the project root',
-              name: { type: "string", description: "filename with as much of the path as you can deduce" },
+              "Search for a file in the project using a glob pattern.",
+              glob_pattern: { type: "string", description: "A glob pattern to search for. Example: 'test/**/*_test.rb'" },
+              path: { type: "string", description: "path to search from" },
             ) do |params|
-              Roast::Tools::SearchFile.call(params[:name]).tap do |result|
+              Roast::Tools::SearchFile.call(params[:glob_pattern], params[:path]).tap do |result|
                 Roast::Helpers::Logger.debug(result) if ENV["DEBUG"]
               end
             end
@@ -24,13 +25,13 @@ module Roast
         end
       end
 
-      def call(filename)
-        Roast::Helpers::Logger.info("🔍 Searching for file: #{filename}\n")
-        search_for(filename).then do |results|
-          return "No results found for #{filename}" if results.empty?
-          return Roast::Tools::ReadFile.call(results.first) if results.size == 1
+      def call(glob_pattern, path = ".")
+        Roast::Helpers::Logger.info("🔍 Searching for file: #{glob_pattern}\n")
+        search_for(glob_pattern, path).then do |results|
+          return "No results found for #{glob_pattern} in #{path}" if results.empty?
+          return read_contents(results.first) if results.size == 1
 
-          results.inspect # purposely give the AI list of actual paths so that it can read without searching first
+          results.join("\n") # purposely give the AI list of actual paths so that it can read without searching first
         end
       rescue StandardError => e
         "Error searching for file: #{e.message}".tap do |error_message|
@@ -39,12 +40,18 @@ module Roast
         end
       end
 
-      def search_for(filename)
-        # Execute find command and get the output using -path to match against full paths
-        result = %x(find . -type f -path "*#{filename}*").strip
+      def read_contents(path)
+        contents = File.read(path)
+        token_count = contents.size / 4
+        if token_count > 25_000
+          path
+        else
+          contents
+        end
+      end
 
-        # Split by newlines and get the first result
-        result.split("\n").map(&:strip).reject(&:empty?).map { |path| path.sub(%r{^\./}, "") }
+      def search_for(pattern, path)
+        Dir.glob(pattern, base: path)
       end
     end
   end
