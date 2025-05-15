@@ -12,7 +12,11 @@ end
 
 task test: [:minitest]
 
-RuboCop::RakeTask.new do |task|
+RuboCop::RakeTask.new(:rubocop_ci)
+
+task ci: [:test, :rubocop_ci]
+
+RuboCop::RakeTask.new(:rubocop) do |task|
   task.options = ["--autocorrect"]
 end
 
