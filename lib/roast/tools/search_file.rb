@@ -26,7 +26,7 @@ module Roast
       end
 
       def call(glob_pattern, path = ".")
-        Roast::Helpers::Logger.info("🔍 Searching for file: #{glob_pattern}\n")
+        Roast::Helpers::Logger.info("🔍 Searching for: '#{glob_pattern}' in '#{path}'\n")
         search_for(glob_pattern, path).then do |results|
           return "No results found for #{glob_pattern} in #{path}" if results.empty?
           return read_contents(results.first) if results.size == 1
@@ -34,7 +34,7 @@ module Roast
           results.join("\n") # purposely give the AI list of actual paths so that it can read without searching first
         end
       rescue StandardError => e
-        "Error searching for file: #{e.message}".tap do |error_message|
+        "Error searching for '#{glob_pattern}' in '#{path}': #{e.message}".tap do |error_message|
           Roast::Helpers::Logger.error(error_message + "\n")
           Roast::Helpers::Logger.debug(e.backtrace.join("\n") + "\n") if ENV["DEBUG"]
         end
