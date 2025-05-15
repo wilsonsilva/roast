@@ -29,6 +29,11 @@ module Roast
       Roast::Workflow::ConfigurationParser.new(expanded_workflow_path, files, options.transform_keys(&:to_sym)).begin!
     end
 
+    desc "version", "Display the current version of Roast"
+    def version
+      puts "Roast version #{Roast::VERSION}"
+    end
+
     class << self
       def exit_on_failure?
         true
