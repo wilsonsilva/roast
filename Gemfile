@@ -9,7 +9,6 @@ gemspec
 
 gem "cgi"
 gem "dotenv"
-gem "guard-rspec"
 gem "guard"
 gem "mocha"
 gem "pry"
