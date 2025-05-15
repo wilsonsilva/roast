@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2024-05-15
+
+### Added
+- Support for OpenRouter as an API provider
+- `api_provider` configuration option allowing choice between OpenAI and OpenRouter
+- Added separate CI rake task for improved build pipeline
+- Version command to check current Roast version
+- Walking up to home folder for config root
+- Improved initializer support for better project configuration
+
+### Changed
+- Enhanced search tool to work with globs for more flexible searches
+- Improved error handling in configuration and initializers
+- Fixed and simplified interpolation examples
+
+### Fixed
+- Better error messages for search file tool
+- Improved initializer loading and error handling
+- Fixed tests for nested .roast folders
+
+[0.1.6]: https://github.com/Shopify/roast/compare/v0.1.5...v0.1.6
+
 ## [0.1.5] - 2024-05-13
 
 ### Added
