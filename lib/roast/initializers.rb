@@ -30,6 +30,7 @@ module Roast
           require file
         end
       rescue => e
+        puts "ERROR: Error loading initializers: #{e.message}"
         Roast::Helpers::Logger.error("Error loading initializers: #{e.message}")
         # Don't fail the workflow if initializers can't be loaded
       end
