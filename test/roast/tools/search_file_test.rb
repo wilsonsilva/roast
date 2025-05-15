@@ -113,7 +113,7 @@ class RoastToolsSearchFileTest < ActiveSupport::TestCase
     Roast::Tools::SearchFile.stubs(:search_for).with("test_file", ".").raises(StandardError, "Search failed")
 
     result = Roast::Tools::SearchFile.call("test_file")
-    assert_equal "Error searching for file: Search failed", result
+    assert_equal "Error searching for 'test_file' in '.': Search failed", result
   end
 
   class DummyBaseClass
